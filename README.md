@@ -24,10 +24,11 @@ Start db
 
 -  mysql -u root -p                                 # login for db  and press enter  )
 -  MariaDB [(none)]> CREATE DATABASE keystone;      # Create db keystone
-- Grant privilaeges 
+- Grant privilaeges for db keystone
 ```
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' \
 IDENTIFIED BY '<password for keystone>';
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' \
 IDENTIFIED BY '<password for keystone>';
 ```
+
