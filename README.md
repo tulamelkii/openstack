@@ -1,4 +1,4 @@
-Keystone- install on the controller, this is service who create main catalog for  autinfication and authorization
+Keystone modules - install on the controller, this is service who create main catalog for  autinfication and authorization
 
 Keystone needs for interactions services and users
 
@@ -31,4 +31,27 @@ IDENTIFIED BY '<password for keystone>';
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' \
 IDENTIFIED BY '<password for keystone>';
 ```
+install httpd, mod_wsgi                 # install apache and plus module wsgi  
 
+- install packages dnf centos-release-openstack-antelope for antilopa and install openstack-keystone 
+```
+ sudo dnf install -y centos-release-openstack-antelope
+ sudo yum install openstack-keystone
+ ```
+- edit config  /etc/keystone/keystone.conf add password
+
+```
+[database]
+# ...
+connection = mysql+pymysql://keystone:<password_for_db_ceystone>@controller/keystone
+``` 
+- edit token provider
+
+[token]
+# ...
+provider = fernet
+```
+run sync mariadb and module keystone 
+
+su -s /bin/sh -c "keystone-manage db_sync" keystone
+  
