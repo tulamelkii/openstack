@@ -1,6 +1,6 @@
-Keystone-installi on the controller 
+Keystone- install on the controller, this is service who create main catalog for  autinfication and authorization
 
-Keystone deploys for create token and http apache
+Keystone needs for interactions services and users
 
 This is fist identifity service, who use users with autinfication and authorization
 - first  yum update
