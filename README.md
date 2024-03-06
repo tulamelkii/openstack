@@ -64,6 +64,32 @@ su -s /bin/sh -c "keystone-manage db_sync" keystone
 2024-03-06 06:17:20.074 9546 INFO alembic.runtime.migration [-] Running upgrade 27e647c0fad4 -> e25ffa003242, Initial no-op Yoga contract migration.
 2024-03-06 06:17:20.075 9546 INFO alembic.runtime.migration [-] Running upgrade 27e647c0fad4 -> 29e87d24a316, Initial no-op Yoga expand migration.
 ..........................
-
-
- 
+```
+create user keystone and group keysone  that will be used to run keystone
+```
+ keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+ keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+...log..........
+2024-03-06 07:57:49.585 9642 INFO keystone.common.utils [-] /etc/keystone/credential-keys/ does not appear to exist; attempting to create it
+2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Created a new temporary key: /etc/keystone/credential-keys/0.tmp
+2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Become a valid new key: /etc/keystone/credential-keys/0
+2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Starting key rotation with 1 key files: ['/etc/keystone/credential-keys/0']
+2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Created a new temporary key: /etc/keystone/credential-keys/0.tmp
+2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Current primary key is: 0
+2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Next primary key will be: 1
+2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Promoted key 0 to be the primary: 1
+2024-03-06 07:57:49.587 9642 INFO keystone.common.fernet_utils [-] Become a valid new key: /etc/keystone/credential-keys/0
+.................
+```
+create api for user admin, add password and 
+```
+ keystone-manage bootstrap --bootstrap-password <password_admin> \
+  --bootstrap-admin-url http://<ip_controller>:5000/v3/ \
+  --bootstrap-internal-url http://ip :5000/v3/ \
+  --bootstrap-public-url http://10.11.213.200:5000/v3/ \
+  --bootstrap-region-id RegionOn
+```
+add server name for apcahe
+change preference   /etc/httpd/conf/httpd.conf
+```
+servername
