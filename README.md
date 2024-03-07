@@ -4,7 +4,9 @@ Keystone needs for interactions services and users
 
 This is fist identifity service, who use users with autinfication and authorization
 - first  yum update
-- Thecond install maria db and add repo list   /etc/yum.repos.d/centos.repo
+- thecond change host <name vm>
+- enter ip and <name vm>   in /etc/hosts
+- add repo list   /etc/yum.repos.d/centos.repo
 ```
 [mariadb]
 name = MariaDB
@@ -13,17 +15,21 @@ gpgkey= https://rpm.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 ```
 second istall server and client Maria db
-
+```
 - sudo yum install MariaDB-server MariaDB-client
+```  
 (and how watch package yum whatprovides "Maria*"
 
 Start db
- - systemctl start mariadb
-
+ ```
+  systemctl start mariadb
+  systemctl enable mariadb
+```
    check status active and go to maria
-
+```
 -  mysql -u root -p                                 # login for db  and press enter  )
 -  MariaDB [(none)]> CREATE DATABASE keystone;      # Create db keystone
+```
 - Grant privilaeges for db keystone
 ```
 MariaDB [(none)]> GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' \
@@ -38,12 +44,13 @@ install httpd, mod_wsgi                 # install apache and plus module wsgi
  sudo dnf install -y centos-release-openstack-antelope
  sudo yum install openstack-keystone
  ```
-- edit config  /etc/keystone/keystone.conf add password
+- sudo yum install python3-openstackclient
+- edit config /etc/keystone/keystone.conf add password
 - create coonection who connected 
 ```
 [database]
 # ...
-connection = mysql+pymysql://keystone:<password_for_db_ceystone>@<ip:port>/keystone   #change password and ip port controller
+connection = mysql+pymysql://keystone:<password_for_db_ceystone>@<name_host:port>/keystone   #change password and ip port controller
 ``` 
 - edit token provider
 ```
@@ -90,6 +97,58 @@ create api for user admin, add password and
   --bootstrap-region-id RegionOn
 ```
 add server name for apcahe
+
 change preference   /etc/httpd/conf/httpd.conf
 ```
-servername
+servername <controller>
+```
+create link /usr/share/keystone/wsgi-keystone.conf
+```
+ln -s /usr/share/keystone/wsgi-keystone.conf /etc/httpd/conf.d/
+```
+start httpd service
+```
+systemctl enable httpd.service
+systemctl start httpd.service
+```
+check status service and listen 5000 port
+```
+httpd.service - The Apache HTTP Server
+     Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; preset: disabled)
+     Active: active (running) since Wed 2024-03-06 09:08:16 EST; 6s ago
+       Docs: man:httpd.service(8)
+   Main PID: 9778 (httpd)
+     Status: "Started, listening on: port 5000, port 80"
+      Tasks: 197 (limit: 100452)
+     Memory: 80.7M
+        CPU: 298ms
+     CGroup: /system.slice/httpd.service
+             ├─9778 /usr/sbin/httpd -DFOREGROUND
+             ├─9779 /usr/sbin/httpd -DFOREGROUND
+             ├─9780 "(wsgi:keystone-" -DFOREGROUND
+             ├─9781 "(wsgi:keystone-" -DFOREGROUND
+             ├─9782 "(wsgi:keystone-" -DFOREGROUND
+             ├─9783 "(wsgi:keystone-" -DFOREGROUND
+             ├─9784 "(wsgi:keystone-" -DFOREGROUND
+             ├─9785 /usr/sbin/httpd -DFOREGROUND
+             ├─9786 /usr/sbin/httpd -DFOREGROUND
+             └─9787 /usr/sbin/httpd -DFOREGROUND
+
+Mar 06 09:08:16 localhost.localdomain systemd[1]: Starting The Apache HTTP Server...
+Mar 06 09:08:16 localhost.localdomain systemd[1]: Started The Apache HTTP Server.
+Mar 06 09:08:16 localhost.localdomain httpd[9778]: Server configured, listening on: port 5000, port 80
+
+...
+ss -tuln
+tcp          LISTEN        0             511                               *:5000                            *:*
+```
+ ```
+ export OS_USERNAME=admin
+ export OS_PASSWORD=ADMIN_PASS
+ export OS_PROJECT_NAME=admin
+ export OS_USER_DOMAIN_NAME=Default
+ export OS_PROJECT_DOMAIN_NAME=Default
+ export OS_AUTH_URL=http://<host_vm>:5000/v3
+ export OS_IDENTITY_API_VERSION=3
+```
+
