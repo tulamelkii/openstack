@@ -1,4 +1,9 @@
-Keystone modules - install on the controller, this is service who create main catalog for  autinfication and authorization
+
+                                                                              --1--
+
+## Keystone Service 
+
+Keystone - install on the controller, this is service who create main catalog for  autinfication and authorization
 
 Keystone needs for interactions services and users
 
@@ -168,6 +173,19 @@ create scripts for envroment admin-openrc
  export OS_PROJECT_DOMAIN_NAME=Default
  export OS_AUTH_URL=http://<host_vm>:5000/v3
  export OS_IDENTITY_API_VERSION=3
+```
+                                                                          --2--
 
-.......
+## Glance Service (images) 
+The OpenStack Image service includes the following components:
+1)glance-api
+  Accepts Image API calls for image discovery, retrieval, and storage.
+2)Database
+Stores image metadata and you can choose your database depending on your preference
+3)Storage repository
+ filesystem mounted on the glance-api controller node
+4) Metadata definition service
+A common API for vendors, admins, services, and users to meaningfully define their own custom metadata.
+
+
 
