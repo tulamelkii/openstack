@@ -44,7 +44,11 @@ install httpd, mod_wsgi                 # install apache and plus module wsgi
  sudo dnf install -y centos-release-openstack-antelope
  sudo yum install openstack-keystone
  ```
+install client !
+```
 - sudo yum install python3-openstackclient
+```
+  
 - edit config /etc/keystone/keystone.conf add password
 - create coonection who connected 
 ```
@@ -62,6 +66,7 @@ provider = fernet
 - check connection mariadb  
 ```
 su -s /bin/sh -c "keystone-manage db_sync" keystone
+
 ...log its ok connect....
 2024-03-06 06:17:19.570 9546 INFO alembic.runtime.migration [-] Context impl MySQLImpl.
 2024-03-06 06:17:19.571 9546 INFO alembic.runtime.migration [-] Will assume non-transactional DDL.
@@ -91,9 +96,9 @@ create user keystone and group keysone  that will be used to run keystone
 create api for user admin, add password and 
 ```
  keystone-manage bootstrap --bootstrap-password <password_admin> \
-  --bootstrap-admin-url http://<ip_controller>:5000/v3/ \
-  --bootstrap-internal-url http://ip :5000/v3/ \
-  --bootstrap-public-url http://10.11.213.200:5000/v3/ \
+  --bootstrap-admin-url http://<host_name>:5000/v3/ \
+  --bootstrap-internal-url http://<host_name>:5000/v3/ \
+  --bootstrap-public-url http://<host_name> 5000/v3/ \
   --bootstrap-region-id RegionOn
 ```
 add server name for apcahe
@@ -151,4 +156,18 @@ tcp          LISTEN        0             511                               *:500
  export OS_AUTH_URL=http://<host_vm>:5000/v3
  export OS_IDENTITY_API_VERSION=3
 ```
+***
+create scripts for envroment admin-openrc
+- sudo -i
+```
+ vim admin-openrc
+ export OS_USERNAME=admin
+ export OS_PASSWORD=ADMIN_PASS
+ export OS_PROJECT_NAME=admin
+ export OS_USER_DOMAIN_NAME=Default
+ export OS_PROJECT_DOMAIN_NAME=Default
+ export OS_AUTH_URL=http://<host_vm>:5000/v3
+ export OS_IDENTITY_API_VERSION=3
+
+.......
 
