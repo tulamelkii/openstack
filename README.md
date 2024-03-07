@@ -187,5 +187,52 @@ Stores image metadata and you can choose your database depending on your prefere
 4) Metadata definition service
 A common API for vendors, admins, services, and users to meaningfully define their own custom metadata.
 
+- create database
+```
+mysql -u root -p
+MariaDB [(none)]> CREATE DATABASE glance;
+```
+- add roles for user glance
 
+```
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' \
+  IDENTIFIED BY '<password_user>';
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' \
+  IDENTIFIED BY '<password_user>';
+exit 
+```
+go to home directory and run env
+```
+sudo -i
+. admin-openrc
+```
+-create user glance to defaul domen 
+```
+openstack user create --domain default --password-prompt glance
+```
+- create Project service
+```
+openstack project create service --domain default
+```
+- create Role to user glance in project service
+```
+openstack role add --project service --user glance admin
+```
+- create Service glance
+
+```
+openstack service create --name glance  --description "OpenStack Image" image
+```
+- create Api endpoint for images
+- 1. punglic
+```
+openstack endpoint create --region RegionOne image public http://<host_name>:9292
+```
+2.internal
+```
+ openstack endpoint create --region RegionOne image internal http://<host_name>:9292
+```
+3.admin
+```
+openstack endpoint create --region RegionOne image admin http://<hostname>:9292
 
