@@ -8,9 +8,14 @@ Keystone - install on the controller, this is service who create main catalog fo
 Keystone needs for interactions services and users
 
 This is fist identifity service, who use users with autinfication and authorization
-- first  yum update
-- thecond change host <name vm>
+- first
+```
+ dnf config-manager --enable crb # enable full packages for centos(this if extra package)
+yum update
+```
+- thecond change host vim /etc/hosts.. <name vm>
 - enter ip and <name vm>   in /etc/hosts
+
 - add repo list   /etc/yum.repos.d/centos.repo
 ```
 [mariadb]
@@ -86,6 +91,7 @@ create user keystone and group keysone  that will be used to run keystone
 ```
  keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
  keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+
 ...log..........
 2024-03-06 07:57:49.585 9642 INFO keystone.common.utils [-] /etc/keystone/credential-keys/ does not appear to exist; attempting to create it
 2024-03-06 07:57:49.586 9642 INFO keystone.common.fernet_utils [-] Created a new temporary key: /etc/keystone/credential-keys/0.tmp
@@ -110,12 +116,12 @@ add server name for apcahe
 
 change preference   /etc/httpd/conf/httpd.conf
 ```
-servername <controller>
+servername <name_host>
 ```
 create link /usr/share/keystone/wsgi-keystone.conf
 ```
-ln -s /usr/share/keystone/wsgi-keystone.conf /etc/httpd/conf.d/
-```
+ln -s /usr/share/keystone/wsgi-keystone.conf /etc/httpd/conf.d/   #he KeystoneWSGI application is a WSGI (Web Server Gateway Interface) application that provides a web service interface to Keystone.
+ ```
 start httpd service
 ```
 systemctl enable httpd.service
@@ -174,6 +180,39 @@ create scripts for envroment admin-openrc
  export OS_AUTH_URL=http://<host_vm>:5000/v3
  export OS_IDENTITY_API_VERSION=3
 ```
+debug keystone create log
+....../etc/keystone/keystone.conf.........................................
+
+debug = true
+# The name of a logging configuration file. This file is appended to any
+# existing logging configuration files. For details about logging configuration
+# files, see the Python logging module documentation. Note that when logging
+# configuration files are used then all logging configuration is set in the
+# configuration file and other logging configuration options are ignored (for
+# example, log-date-format). (string value)
+# Note: This option can be changed without restarting.
+# Deprecated group/name - [DEFAULT]/log_config
+#log_config_append = <None>
+
+# Defines the format string for %%(asctime)s in log records. Default:
+# %(default)s . This option is ignored if log_config_append is set. (string
+# value)
+log_date_format = %Y-%m-%d %H:%M:%S
+
+# (Optional) Name of log file to send logging output to. If no default is set,
+# logging will go to stderr as defined by use_stderr. This option is ignored if
+# log_config_append is set. (string value)
+# Deprecated group/name - [DEFAULT]/logfile
+#log_file = <None>
+
+# (Optional) The base directory used for relative log_file  paths. This option
+# is ignored if log_config_append is set. (string value)
+# Deprecated group/name - [DEFAULT]/logdir
+log_dir = /var/log/keystone/
+............................................................................
+
+
+
                                                                           --2--
 
 ## Glance Service (images) 
@@ -235,4 +274,17 @@ openstack endpoint create --region RegionOne image public http://<host_name>:929
 3.admin
 ```
 openstack endpoint create --region RegionOne image admin http://<hostname>:9292
+
+install glance
+ 
+if not install openstack-glance and we see error
+...
+Error:
+ Problem: package openstack-glance-1:26.0.0-1.el9s.noarch from centos-openstack-antelope requires python3-glance = 1:26.0.0-1.el9s, but none of the providers can be installed
+  - conflicting requests
+  - nothing provides python3-pyxattr needed by python3-glance-1:26.0.0-1.el9s.noarch from centos-openstack-antelope
+(try to add '--skip-broken' to skip uninstallable packages or '--nobest' to use not only best candidate packages)
+...
+You don't enable full CRB repository and we can or download package python3-pyxattr
+https://mirror.stream.centos.org/9-stream/CRB/x86_64/os/Packages/    #and find python3-pyxattr (package)
 
