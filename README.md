@@ -393,3 +393,12 @@ su -s /bin/sh -c "glance-manage db_sync" glance
  systemctl enable openstack-glance-api.service
  systemctl start openstack-glance-api.service
 ```
+
+#Placement service shedule
+
+1.Resource tracking: Placement maintains a real-time inventory of compute resources available in the cloud. It tracks information such as CPU, memory, storage, network
+2.Resource allocation: When a user requests the creation of a VM or other resource, Placement is responsible for selecting the appropriate compute host to accommodate the workload
+3.Scheduler filters and weights: Placement uses a set of filters and weights to evaluate compute hosts and determine the best placement option
+4.Placement API: OpenStack Placement exposes a RESTful API that allows clients (such as Nova, the OpenStack compute service) to interact with the Placement service. 
+5.Class and train: Resource classes represent different types of resources available in the cloud (e.g., CPU, RAM), while traits describe additional capabilities or features of a resource (e.g., hardware acceleration, SSD storage)
+
