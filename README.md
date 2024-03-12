@@ -215,6 +215,18 @@ log_dir = /var/log/keystone/
 
                                                                           --2--
 
+----------------------        ----------------------         ----------------------
+|                     |       |                     |        |                    |
+    glance- api server  -------  glance registry       ------        db
+|                     |       |                     |        |                    |
+-----------------------       -----------------------        ----------------------
+           |
+           |
+-----------------------
+|                     |
+      Image Store
+|                     |
+-----------------------
 ## Glance Service (images) 
 The OpenStack Image service includes the following components:
 1)glance-api
@@ -342,9 +354,10 @@ yum install openstack-glance
 connection = mysql+pymysql://glance:<glance_pass>@<hostname:port>/glance
 
 ```
- -edit keystoun autotoken 
- [keystone_authtoken]
+- edit keystoun autotoken  /etc/glance/glance-api.conf
 ```
+ [keystone_authtoken]
+
 www_authenticate_uri  = http://<host_name>:5000         # change hostname for autenficate 
 auth_url = http://<hostname>:5000                       # change hostname for auth_url 
 memcached_servers = <hostname> :11211                   #  chanhe host
@@ -359,7 +372,24 @@ password = <password_glance>                            #  change pass
 ...
 flavor = keystone                                       # enable flavor 
 ```
-
-  
-  
-
+- create store for images, change  /etc/glance/glance-api.conf
+```
+[glance_store]
+...
+stores = file,http
+default_store = file
+filesystem_store_datadir = /var/lib/glance/images/
+```
+- add role for user glance only reader
+```
+openstack role add --user glance --user-domain Default --system all reader
+```
+sync db glance 
+```
+su -s /bin/sh -c "glance-manage db_sync" glance
+```
+- enable service glance
+```
+ systemctl enable openstack-glance-api.service
+ systemctl start openstack-glance-api.service
+```
