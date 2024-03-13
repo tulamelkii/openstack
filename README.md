@@ -1,5 +1,13 @@
+- dnf config-manager --enable crb # enable full packages for centos(this if extra package)
+- yum update
+- change   vim /etc/chrony.conf and add server for ntp
+```
+pool ntp0.ntp-servers.net iburst
+```
+change host vim /etc/hosts.. <name vm>
+- enter ip and <name vm>   in /etc/hosts
 
-                                                                              --1--
+                                                                   --1--
 
 ## Keystone Service 
 
@@ -8,15 +16,10 @@ Keystone - install on the controller, this is service who create main catalog fo
 Keystone needs for interactions services and users
 
 This is fist identifity service, who use users with autinfication and authorization
-- first
-```
- dnf config-manager --enable crb # enable full packages for centos(this if extra package)
-yum update
-```
-- thecond change host vim /etc/hosts.. <name vm>
-- enter ip and <name vm>   in /etc/hosts
+change host vim /etc/hosts.. <name vm>
 
-- add repo list   /etc/yum.repos.d/centos.repo
+- add repo list   /etc/yum.repos.d/centos.repo for maria db
+  
 ```
 [mariadb]
 name = MariaDB
