@@ -550,9 +550,30 @@ systemctl restart httpd
 mv policy.json policy.yaml
 ```
 if not change format you will error  for format depricated!!
-
-# Verify 
+yum install
+# Verify
+```
 . admin-openrc
+ placement-status upgrade check
++-------------------------------------------+
+| Upgrade Check Results                     |
++-------------------------------------------+
+| Check: Missing Root Provider IDs          |
+| Result: Success                           |
+| Details: None                             |
++-------------------------------------------+
+| Check: Incomplete Consumers               |
+| Result: Success                           |
+| Details: None                             |
++-------------------------------------------+
+| Check: Policy File JSON to YAML Migration |
+| Result: Success                           |        it's ok 
+| Details: None                             |
++-------------------------------------------+
+
+error
+
+
 
 
 
