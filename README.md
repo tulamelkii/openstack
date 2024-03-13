@@ -621,9 +621,31 @@ Alias /placement-api /usr/bin/placement-api
   WSGIApplicationGroup%{GLOBAL}
   WSGIPassAuthorization On
 </Location>
+```
+- check
+```
+openstack --os-placement-api-version 1.2 resource class list --sort-column name
+...
+[root@Only ~]# openstack --os-placement-api-version 1.2 resource class list --sort-column name
++----------------------------------------+
+| name                                   |
++----------------------------------------+
+| DISK_GB                                |
+| FPGA                                   |
+| IPV4_ADDRESS                           |
+| MEMORY_MB                              |
+| MEM_ENCRYPTION_CONTEXT                 |
+| NET_BW_EGR_KILOBIT_PER_SEC             |
+| NET_BW_IGR_KILOBIT_PER_SEC             |
 
-
-
+openstack --os-placement-api-version 1.6 trait list --sort-column name
++---------------------------------------+
+| name                                  |
++---------------------------------------+
+| COMPUTE_ACCELERATORS                  |
+| COMPUTE_ADDRESS_SPACE_EMULATED        |
+| COMPUTE_ADDRESS_SPACE_PASSTHROUGH     |
+| COMPUTE_ARCH_AARCH64                  |
 
 
 
