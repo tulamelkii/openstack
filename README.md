@@ -397,8 +397,164 @@ su -s /bin/sh -c "glance-manage db_sync" glance
 #Placement service shedule
 
 1.Resource tracking: Placement maintains a real-time inventory of compute resources available in the cloud. It tracks information such as CPU, memory, storage, network
+
 2.Resource allocation: When a user requests the creation of a VM or other resource, Placement is responsible for selecting the appropriate compute host to accommodate the workload
+
 3.Scheduler filters and weights: Placement uses a set of filters and weights to evaluate compute hosts and determine the best placement option
+
 4.Placement API: OpenStack Placement exposes a RESTful API that allows clients (such as Nova, the OpenStack compute service) to interact with the Placement service. 
+
 5.Class and train: Resource classes represent different types of resources available in the cloud (e.g., CPU, RAM), while traits describe additional capabilities or features of a resource (e.g., hardware acceleration, SSD storage)
+
+To create the database, complete these steps:
+```
+mysql -u root -p
+MariaDB [(none)]> CREATE DATABASE placement;
+```
+add privleges for user placement
+
+```
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON placement.* TO 'placement'@'localhost' \
+  IDENTIFIED BY '<password>';
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON placement.* TO 'placement'@'%' \
+  IDENTIFIED BY 'password';
+```
+configure user and endpoint 
+```
+.admin-openrc
+openstack user create --domain default --password-prompt placement
+User Password:
+Repeat User Password:
++---------------------+----------------------------------+
+| Field               | Value                            |
++---------------------+----------------------------------+
+| domain_id           | default                          |
+| enabled             | True                             |
+| id                  | fa742015a6494a949f67629884fc7ec8 |
+| name                | placement                        |
+| options             | {}                               |
+| password_expires_at | None                             |
++---------------------+----------------------------------+
+```
+add placement user
+```
+openstack role add --project service --user placement admin
+```
+create placement Api
+```
+openstack service create --name placement \
+  --description "Placement API" placement
++-------------+----------------------------------+
+| Field       | Value                            |
++-------------+----------------------------------+
+| description | Placement API                    |
+| enabled     | True                             |
+| id          | 2d1a27022e6e4185b86adac4444c495f |
+| name        | placement                        |
+| type        | placement                        |
++-------------+----------------------------------
+```
+create endpoint api public
+```
+openstack endpoint create --region RegionOne \
+  placement public http://<hostname>:8778     # change hostname
++--------------+----------------------------------+
+| Field        | Value                            |
++--------------+----------------------------------+
+| enabled      | True                             |
+| id           | 2b1b2637908b4137a9c2e0470487cbc0 |
+| interface    | public                           |
+| region       | RegionOne                        |
+| region_id    | RegionOne                        |
+| service_id   | 2d1a27022e6e4185b86adac4444c495f |
+| service_name | placement                        |
+| service_type | placement                        |
+| url          | http://controller:8778           |
++--------------+----------------------------------+
+
+```
+create endpoint api internal 
+```
+openstack endpoint create --region RegionOne \
+  placement internal http://<hostname>:8778
+--------------+----------------------------------+
+| Field        | Value                            |
++--------------+----------------------------------+
+| enabled      | True                             |
+| id           | 02bcda9a150a4bd7993ff4879df971ab |
+| interface    | internal                         |
+| region       | RegionOne                        |
+| region_id    | RegionOne                        |
+| service_id   | 2d1a27022e6e4185b86adac4444c495f |
+| service_name | placement                        |
+| service_type | placement                        |
+| url          | http://controller:8778           |
++--------------+----------------------------------+
+```
+openstack endpoint create --region RegionOne \
+  placement admin http://<hostname>:8778
+```
++--------------+----------------------------------+
+| Field        | Value                            |
++--------------+----------------------------------+
+| enabled      | True                             |
+| id           | 3d71177b9e0f406f98cbff198d74b182 |
+| interface    | admin                            |
+| region       | RegionOne                        |
+| region_id    | RegionOne                        |
+| service_id   | 2d1a27022e6e4185b86adac4444c495f |
+| service_name | placement                        |
+| service_type | placement                        |
+| url          | http://controller:8778           |
++--------------+----------------------------------+
+```
+Install placement
+
+```
+yum install openstack-placement-api
+```
+edit placement.conf
+vim  /etc/placement/placement.conf
+```
+[placement_database]
+# ...
+connection = mysql+pymysql://placement:<password>@<hostname>/placement
+
+[api]
+# ...
+auth_strategy = keystone
+
+[keystone_authtoken]
+# ...
+auth_url = http://<hostname>:5000/v3
+memcached_servers = controller:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = placement
+password = 1qaz2wsx
+```
+- synhronise db
+```
+su -s /bin/sh -c "placement-manage db sync" placement
+```
+restart httpd
+```
+systemctl restart httpd
+```
+- Change file vim /etc/keystone/policy.json to => vim /etc/keystone/policy.yaml !!!
+  
+- Change file vim /etc/keystone/policy.json to => vim /etc/placement/policy.yaml !!!
+```
+mv policy.json policy.yaml
+```
+if not change format you will error  for format depricated!!
+
+# Verify 
+. admin-openrc
+
+
+
+
 
