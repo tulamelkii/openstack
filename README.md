@@ -550,8 +550,15 @@ systemctl restart httpd
 mv policy.json policy.yaml
 ```
 if not change format you will error  for format depricated!!
-yum install
+- yum install osc-placement
+
 # Verify
+
+- yum install osc-placemen
+```
+yum install  python3-osc-placement
+```
+
 ```
 . admin-openrc
  placement-status upgrade check
@@ -570,9 +577,50 @@ yum install
 | Result: Success                           |        it's ok 
 | Details: None                             |
 +-------------------------------------------+
-
+```
 error
 
+[root@Only ~]# openstack allocation candidate list --resource VCPU=1
+
+***Expecting value: line 1 column 1 (char 0)
+
+- Problem access for web to direcrory 
+- edit 00-placement-api.conf and add access for directory /usr/bin
+```
+[root@controller ~]# vim /etc/httpd/conf.d/00-placement-api.conf
+...
+
+[root@controller ~]# vim /etc/httpd/conf.d/00-placement-api.conf
+
+Listen 8778
+
+<VirtualHost *:8778>
+  WSGIProcessGroup placement-api
+  WSGIApplicationGroup%{GLOBAL}
+  WSGIPassAuthorization On
+  WSGIDaemonProcess placement-api processes=3 threads=1 user=placement group=placement
+  WSGIScriptAlias/ /usr/bin/placement-api
+  <IfVersion >= 2.4>
+    ErrorLogFormat "%M"
+  </IfVersion>
+  ErrorLog /var/log/placement/placement-api.log
+  #SSLEngine On
+  #SSLCertificateFile...
+  #SSLCertificateKeyFile...
+  <Directory /usr/bin>                              # add
+     <IfVersion >= 2.4>                             # add 
+       Require all granted                          # add
+     </IfVersion>                                   # add
+  </Directory>
+</VirtualHost>
+Alias /placement-api /usr/bin/placement-api
+<Location /placement-api>
+  SetHandler wsgi-script
+  Options + ExecCGI
+  WSGIProcessGroup placement-api
+  WSGIApplicationGroup%{GLOBAL}
+  WSGIPassAuthorization On
+</Location>
 
 
 
