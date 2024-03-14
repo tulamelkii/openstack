@@ -663,15 +663,15 @@ characteristics and the level of available resources.
 
                                                  ---4---
 
-# nova-api - Accepts and responds to end user compute API calls. The service supports the OpenStack Compute API. Running an 
+## nova-api - Accepts and responds to end user compute API calls. The service supports the OpenStack Compute API. Running an 
 
 instance.
 
-# nova-api-metadata - provides metadata about virtual machines that are managed by OpenStack Compute (Nova). This service provides 
+## nova-api-metadata - provides metadata about virtual machines that are managed by OpenStack Compute (Nova). This service provides 
 
 information about virtual machines such as their ID, name, IP address, image, resources used, status, etc. 
 
-# nova-compute service - The nova-compute service monitors the allocation and management of computing resources (both physical and 
+## nova-compute service - The nova-compute service monitors the allocation and management of computing resources (both physical and 
 
 virtual) for instances (virtual machines) and ensures the execution of requests for the creation, management and deletion of 
 
@@ -686,14 +686,14 @@ The nova-compute service is also responsible for monitoring and managing the sta
 their lifecycle (creation, startup, suspension, resumption, shutdown, deletion) and resource allocation.
 
 
-# nova-scheduler  -  Takes a virtual machine instance request from the queue and determines on which compute server host it runs.
+## nova-scheduler  -  Takes a virtual machine instance request from the queue and determines on which compute server host it runs.
  
-# nova-conductor  -  nova-conductor module scales horizontally. However, do not deploy it on nodes where the nova-compute service runs
+## nova-conductor  -  nova-conductor module scales horizontally. However, do not deploy it on nodes where the nova-compute service runs
 
-# nova-novncproxy daemon
+## nova-novncproxy daemon
 Provides a proxy for accessing running instances through a VNC connection. Supports browser-based novnc clients.
 
-# nova-spicehtml5proxy daemon
+## nova-spicehtml5proxy daemon
 Provides a proxy for accessing running instances through a SPICE connection. Supports browser-based HTML5 client.
 
 
