@@ -396,6 +396,8 @@ su -s /bin/sh -c "glance-manage db_sync" glance
  systemctl enable openstack-glance-api.service
  systemctl start openstack-glance-api.service
 ```
+                                                            ---3--- 
+                                                       
 
 #Placement service shedule
 
@@ -649,6 +651,46 @@ openstack --os-placement-api-version 1.6 trait list --sort-column name
 | COMPUTE_ADDRESS_SPACE_EMULATED        |
 | COMPUTE_ADDRESS_SPACE_PASSTHROUGH     |
 | COMPUTE_ARCH_AARCH64                  |
+```
 
+A request to create a virtual machine (VM) is sent to the cloud infrastructure management system (for example, OpenStack Nova),
+
+which then accesses the placement service to clarify the available resources. Placement provides information about available 
+
+computing power, memory, storage and other resources, based on which Nova creates a virtual machine based on the required 
+
+characteristics and the level of available resources.
+
+                                                 ---4---
+
+nova-api - Accepts and responds to end user compute API calls. The service supports the OpenStack Compute API. Running an 
+
+instance.
+
+nova-api-metadata - provides metadata about virtual machines that are managed by OpenStack Compute (Nova). This service provides 
+
+information about virtual machines such as their ID, name, IP address, image, resources used, status, etc. 
+
+nova-compute service - The nova-compute service monitors the allocation and management of computing resources (both physical and 
+
+virtual) for instances (virtual machines) and ensures the execution of requests for the creation, management and deletion of 
+
+virtual machines.
+
+It interacts with hypervisors such as KVM, Xen, VMware and others to manage virtual machines and dedicated resources such as 
+
+processor, memory and storage.
+
+The nova-compute service is also responsible for monitoring and managing the state of virtual machines, including monitoring 
+
+their lifecycle (creation, startup, suspension, resumption, shutdown, deletion) and resource allocation.
+
+nova-scheduler  - run vm with
+ 
+nova-conductor      -
+
+
+
+nova-novncproxy
 
 
