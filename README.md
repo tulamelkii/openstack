@@ -696,6 +696,109 @@ Provides a proxy for accessing running instances through a VNC connection. Suppo
 - nova-spicehtml5proxy daemon
 Provides a proxy for accessing running instances through a SPICE connection. Supports browser-based HTML5 client.
 
+- create bd nova_api; nova; nova_cel0
+  ```
+   mysql -u root -p
+
+   MariaDB [(none)]> CREATE DATABASE nova_api;
+   MariaDB [(none)]> CREATE DATABASE nova;
+   MariaDB [(none)]> CREATE DATABASE nova_cell0;
+  ```
+- grant access to db
+```
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' \
+  IDENTIFIED BY '<password>'';                                                             #change pass
+
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' \
+  IDENTIFIED BY '<password>';                                                               #change pass
+
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' \
+  IDENTIFIED BY 'NOVA_DBPASS';                                                              #change pass
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' \
+  IDENTIFIED BY '<password>';
+                                                           
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'localhost' \               #change pass
+  IDENTIFIED BY '<password>';
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' \                      change password 
+  IDENTIFIED BY '<password>';
+```
+ 
+. admin-openrc
+- create computer service credentional(create nova instance)
+```
+ openstack user create --domain default --password-prompt nova
+User Password:
+Repeat User Password:
++---------------------+----------------------------------+
+| Field               | Value                            |
++---------------------+----------------------------------+
+| domain_id           | default                          |
+| enabled             | True                             |
+| id                  | 8a7dbf5279404537b1c7b86c033620fe |
+| name                | nova                             |
+| options             | {}                               |
+| password_expires_at | None                             |
++---------------------+----------------------------------+
+```
+- add role to user nova admin
+```
+ openstack role add --project service --user nova admin
+```
+- create nova service
+```
+ openstack service create --name nova  --description "OpenStack Compute" compute
+```
+ - create compute api endpoint admin, internal and public
+```
+  openstack endpoint create --region RegionOne compute public http://<host>:8774/v2.1  #change host
++--------------+-------------------------------------------+
+| Field        | Value                                     |
++--------------+-------------------------------------------+
+| enabled      | True                                      |
+| id           | 3c1caa473bfe4390a11e7177894bcc7b          |
+| interface    | public                                    |
+| region       | RegionOne                                 |
+| region_id    | RegionOne                                 |
+| service_id   | 060d59eac51b4594815603d75a00aba2          |
+| service_name | nova                                      |
+| service_type | compute                                   |
+| url          | http://controller:8774/v2.1               |
++--------------+-------------------------------------------+
+
+openstack endpoint create --region RegionOne compute internal http://<host>:8774/v2.1    chaange host 
++--------------+-------------------------------------------+
+| Field        | Value                                     |
++--------------+-------------------------------------------+
+| enabled      | True                                      |
+| id           | e3c918de680746a586eac1f2d9bc10ab          |
+| interface    | internal                                  |
+| region       | RegionOne                                 |
+| region_id    | RegionOne                                 |
+| service_id   | 060d59eac51b4594815603d75a00aba2          |
+| service_name | nova                                      |
+| service_type | compute                                   |
+| url          | http://controller:8774/v2.1               |
++--------------+-------------------------------------------+
+openstack endpoint create --region RegionOne compute admin http://<hostname>:8774/v2.1    #change host
++--------------+-------------------------------------------+
+| Field        | Value                                     |
++--------------+-------------------------------------------+
+| enabled      | True                                      |
+| id           | 38f7af91666a47cfb97b4dc790b94424          |
+| interface    | admin                                     |
+| region       | RegionOne                                 |
+| region_id    | RegionOne                                 |
+| service_id   | 060d59eac51b4594815603d75a00aba2          |
+| service_name | nova                                      |
+| service_type | compute                                   |
+| url          | http://controller:8774/v2.1               |
++--------------+-------------------------------------------+
+```
+ yum install openstack-nova-api openstack-nova-conductor openstack-nova-novncproxy openstack-nova-scheduler 
+
+install rabbit mq  
+
+
 - The queue - Rabbit
 raait.conf ------
  listeners.tcp.default = 5672
