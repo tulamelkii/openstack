@@ -794,7 +794,35 @@ openstack endpoint create --region RegionOne compute admin http://<hostname>:877
 | url          | http://controller:8774/v2.1               |
 +--------------+-------------------------------------------+
 ```
- yum install openstack-nova-api openstack-nova-conductor openstack-nova-novncproxy openstack-nova-scheduler 
+install rabbit, nova-api,nova-conductor,nova-novncproxy,nova-sceduler
+```
+ sudo yum install openstack-nova-api openstack-nova-conductor openstack-nova-novncproxy openstack-nova-scheduler  
+ sudo  dnf -y install rabbitmq-server memcached
+```
+change preference nova.conf
+
+enable config api for os and api metadata 
+```
+[DEFAULT]
+# ...
+enabled_apis = osapi_compute,metadata
+```
+create access for api database 
+api base -*** authorization user for api, reqwest for create , dell vm and managment vm 
+
+```
+[api_database]
+# ...
+connection = mysql+pymysql://nova:<password>@<hostname>/nova_api
+```
+The nova database is used to store data about virtual machines, images, networks, projects, as well as information about how they are interconnected.
+```
+[database]
+# ...
+connection = mysql+pymysql://nova:<password>@<hostname>/nova
+```
+
+vim /etc/nova/nova.conf
 
 install rabbit mq  
 
