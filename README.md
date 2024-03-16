@@ -829,10 +829,10 @@ install rabbit mq
 
 - The queue - Rabbit
 raait.conf ------
- listeners.tcp.default = 5672
+
 install libvirt
 yum install qemu-kvm  libvirt virt-install
-- add 
-  compute_driver=libvirt.LibvirtDriver
+- add ... access 3 folder
+ change conf compute_driver=libvirt.LibvirtDriver
 
 
