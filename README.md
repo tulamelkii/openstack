@@ -696,8 +696,11 @@ Provides a proxy for accessing running instances through a VNC connection. Suppo
 - nova-spicehtml5proxy daemon
 Provides a proxy for accessing running instances through a SPICE connection. Supports browser-based HTML5 client.
 
+                                                                                                                        --- install for controller ---
+  
+
 - create bd nova_api; nova; nova_cel0
-  ```
+```
    mysql -u root -p
 
    MariaDB [(none)]> CREATE DATABASE nova_api;
@@ -799,9 +802,11 @@ install rabbit, nova-api,nova-conductor,nova-novncproxy,nova-sceduler
  sudo yum install openstack-nova-api openstack-nova-conductor openstack-nova-novncproxy openstack-nova-scheduler  
  sudo  dnf -y install rabbitmq-server memcached
 ```
-change preference nova.conf
-
-enable config api for os and api metadata 
+- change preference nova.conf
+```
+vim /etc/nova/nova.conf
+```
+- enable config api for os and api metadata 
 ```
 [DEFAULT]
 # ...
@@ -809,7 +814,6 @@ enabled_apis = osapi_compute,metadata
 ```
 create access for api database 
 api base -*** authorization user for api, reqwest for create , dell vm and managment vm 
-
 ```
 [api_database]
 # ...
@@ -821,18 +825,160 @@ The nova database is used to store data about virtual machines, images, networks
 # ...
 connection = mysql+pymysql://nova:<password>@<hostname>/nova
 ```
+- change transprt
+```  
+[DEFAULT]
+# ...
+transport_url = rabbit://openstack:<password>@<hostname>:5672/    #Change password and name host
+```
+Add strategy and authorization nova with token (/etc/nova/nova.conf)
 
-vim /etc/nova/nova.conf
+```
+[api]
+# ...
+auth_strategy = keystone
 
-install rabbit mq  
+[keystone_authtoken]
+# ...
+www_authenticate_uri = http://<host>:5000/   #change host
+auth_url = http://<host>:5000/               #change host
+memcached_servers = controller:11211
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = nova
+password = <pass>                           #change pass
 
+```
+- create service user for nova need for lond seesion(live migration or snapshot take long enough to exceed the expiry of the user token vim /etc/nova/nova.conf)
+```
+[service_user]
+send_service_user_token = true
+auth_url = https://controller/identity
+auth_strategy = keystone
+auth_type = password
+project_domain_name = Default
+project_name = service
+user_domain_name = Default
+username = nova
+password = NOVA_PASS
+```
+- add ip managment interface /etc/nova/nova.conf
 
-- The queue - Rabbit
-raait.conf ------
+```
+[DEFAULT]
+# ...
+my_ip = <ip for managment interface>
+```
+- enable vnc
+```
+[vnc]
+enabled = true
+# ...
+server_listen = $my_ip
+server_proxyclient_address = $my_ip
+```
+- add glance server 
 
-install libvirt
-yum install qemu-kvm  libvirt virt-install
-- add ... access 3 folder
- change conf compute_driver=libvirt.LibvirtDriver
+```
+[glance]
+# ...
+api_servers = http://<host>:9292
+```
+- lock path nova tmp ( This path is used to temporarily store lock files, which are used to synchronize access to shared resources and prevent conflicts between parallel threads or processes)
+```
+[oslo_concurrency]
+# ...
+lock_path = /var/lib/nova/tmp
+```
+add accecss for placement
+```
+[placement]
+# ...
+region_name = RegionOne
+project_domain_name = Default
+project_name = service
+auth_type = password
+user_domain_name = Default
+auth_url = http://<host>:5000/v3          #change host        
+username = placement
+password = <password>                     # change password
+```
+- Register cell0 ( responsible for coordinating actions between different cells ) main cell 
+ ```
+su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
+```
+- create cell1  for scaling nova space
+  ```
+   su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
+  ```
+synhronise bd  
 
+```
+su -s /bin/sh -c "nova-manage db sync" nova
+```
 
+- Verify nova cell0 and cell1 are registered correctly (0 and 1 cell)
+```
+su -s /bin/sh -c "nova-manage cell_v2 list_cells" nova
++-------+--------------------------------------+----------------------------------------------------+--------------------------------------------------------------+----------+
+|  Name |                 UUID                 |                   Transport URL                    |                     Database Connection                      | Disabled |
++-------+--------------------------------------+----------------------------------------------------+--------------------------------------------------------------+----------+
+| cell0 | 00000000-0000-0000-0000-000000000000 |                       none:/                       | mysql+pymysql://nova:****@controller/nova_cell0?charset=utf8 |  False   |
+| cell1 | f690f4fd-2bc5-4f15-8145-db561a7b9d3d | rabbit://openstack:****@controller:5672/nova_cell1 | mysql+pymysql://nova:****@controller/nova_cell1?charset=utf8 |  False   |
++-------+--------------------------------------+----------------------------------------------------+--------------------------------------------------------------+----------+
+```
+- enable service and start
+```
+# systemctl enable \
+    openstack-nova-api.service \
+    openstack-nova-scheduler.service \
+    openstack-nova-conductor.service \
+    openstack-nova-novncproxy.service
+# systemctl start \
+    openstack-nova-api.service \
+    openstack-nova-scheduler.service \
+    openstack-nova-conductor.service \
+    openstack-nova-novncproxy.service
+```
+
+                                                                                                         ---install compute node ---
+                                                                                                         
+                                                                                                         
+- install nova compute
+```                                                                                                       
+yum install openstack-nova-compute                                                                                                       
+```
+vim  /etc/nova/nova.conf and enable api 
+
+```
+[DEFAULT]
+# ...
+enabled_apis = osapi_compute,metadata
+```
+---
+- install libvirt, qemu-kvm, libvirt-client
+```
+yum install qemu-kvm qemu-img libvirt virt-install libvirt-client 
+```
+
+- change path for nova.conf 
+```
+lock_path = /var/lib/nova (  lock_path = /var/lib/nova/tmp wrong)
+ log_dir = /var/log/nova
+```
+check hardware acceleration for virtual machine 
+```
+egrep -c '(vmx|svm)' /proc/cpuinfo
+```
+- enable qemu
+``` 
+[libvirt]
+# ...
+virt_type = qemu
+```
+enable driver 
+```
+ compute_driver=libvirt.LibvirtDriver
+```
