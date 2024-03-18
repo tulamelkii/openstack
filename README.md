@@ -963,10 +963,12 @@ enabled_apis = osapi_compute,metadata
 yum install qemu-kvm qemu-img libvirt virt-install libvirt-client 
 ```
 
-- change path for nova.conf 
+- change path for nova.conf (error access for nova/tmp) !!! 
 ```
 lock_path = /var/lib/nova (  lock_path = /var/lib/nova/tmp wrong)
- log_dir = /var/log/nova
+log_dir = /var/log/nova
+state_path=var/lib/nova
+
 ```
 check hardware acceleration for virtual machine 
 ```
@@ -982,3 +984,125 @@ enable driver
 ```
  compute_driver=libvirt.LibvirtDriver
 ```
+start and enabled service nova
+```
+systemctl enable libvirtd.service openstack-nova-compute.service
+systemctl start libvirtd.service openstack-nova-compute.service
+```
+. admin-openrc
+```
+$ openstack compute service list --service nova-compute
++----+-------+--------------+------+-------+---------+----------------------------+
+| ID | Host  | Binary       | Zone | State | Status  | Updated At                 |
++----+-------+--------------+------+-------+---------+----------------------------+
+| 1  | node1 | nova-compute | nova | up    | enabled | 2017-04-14T15:30:44.000000 |
++----+-------+--------------+------+-------+---------+----------------------------+
+```
+Discover compute hosts:(find host)
+```
+su -s /bin/sh -c "nova-manage cell_v2 discover_hosts --verbose" nova
+
+... log ....
+Found 2 cell mappings.
+Skipping cell0 since it does not contain hosts.
+Getting compute nodes from cell 'cell1': ad5a5985-a719-4567-98d8-8d148aaae4bc
+Found 1 computes in cell: ad5a5985-a719-4567-98d8-8d148aaae4bc
+Checking host mapping for compute host 'compute': fe58ddc1-1d65-4f87-9456-bc040dc106b3
+Creating host mapping for compute host 'compute': fe58ddc1-1d65-4f87-9456-bc040dc106b3
+...log...
+```
+add sceduller for discover 
+```
+[scheduler]
+discover_hosts_in_cells_interval = 300
+```
+
+## Check nova status 
+----
+```
+openstack compute service list
+
++----+--------------------+------------+----------+---------+-------+----------------------------+
+| Id | Binary             | Host       | Zone     | Status  | State | Updated At                 |
++----+--------------------+------------+----------+---------+-------+----------------------------+
+|  1 | nova-scheduler     | controller | internal | enabled | up    | 2016-02-09T23:11:15.000000 |
+|  2 | nova-conductor     | controller | internal | enabled | up    | 2016-02-09T23:11:16.000000 |
+|  3 | nova-compute       | compute1   | nova     | enabled | up    | 2016-02-09T23:11:20.000000 |
++----+--------------------+------------+----------+---------+-------+----------------------------+
+```
+list api and chec access
+
+```
+ openstack catalog list
+
++-----------+-----------+-----------------------------------------+
+| Name      | Type      | Endpoints                               |
++-----------+-----------+-----------------------------------------+
+| keystone  | identity  | RegionOne                               |
+|           |           |   public: http://controller:5000/v3/    |
+|           |           | RegionOne                               |
+|           |           |   internal: http://controller:5000/v3/  |
+|           |           | RegionOne                               |
+|           |           |   admin: http://controller:5000/v3/     |
+|           |           |                                         |
+| glance    | image     | RegionOne                               |
+|           |           |   admin: http://controller:9292         |
+|           |           | RegionOne                               |
+|           |           |   public: http://controller:9292        |
+|           |           | RegionOne                               |
+|           |           |   internal: http://controller:9292      |
+|           |           |                                         |
+| nova      | compute   | RegionOne                               |
+|           |           |   admin: http://controller:8774/v2.1    |
+|           |           | RegionOne                               |
+|           |           |   internal: http://controller:8774/v2.1 |
+|           |           | RegionOne                               |
+|           |           |   public: http://controller:8774/v2.1   |
+|           |           |                                         |
+| placement | placement | RegionOne                               |
+|           |           |   public: http://controller:8778        |
+|           |           | RegionOne                               |
+|           |           |   admin: http://controller:8778         |
+|           |           | RegionOne                               |
+|           |           |   internal: http://controller:8778      |
+|           |           |                                         |
++-----------+-----------+-----------------------------------------+
+```
+- list images 
+```
+openstack image list
+
++--------------------------------------+-------------+-------------+
+| ID                                   | Name        | Status      |
++--------------------------------------+-------------+-------------+
+| 9a76d9f9-9620-4f2e-8c69-6c5691fae163 | cirros      | active      |
++--------------------------------------+-------------+-------------+
+```
+- Check the cells and placement API are working successfull
+```
+ nova-status upgrade check
++--------------------------------------------------------------------+
+| Upgrade Check Results                                              |
++--------------------------------------------------------------------+
+| Check: Cells v2                                                    |
+| Result: Success                                                    |
+| Details: None                                                      |
++--------------------------------------------------------------------+
+| Check: Placement API                                               |
+| Result: Success                                                    |
+| Details: None                                                      |
++--------------------------------------------------------------------+
+| Check: Cinder API                                                  |
+| Result: Success                                                    |
+| Details: None                                                      |
++--------------------------------------------------------------------+
+| Check: Policy File JSON to YAML Migration                          |
+| Result: Success                                                    |
+| Details: None                                                      |
++--------------------------------------------------------------------+
+| Check: Older than N-1 computes                                     |
+| Result: Success                                                    |
+| Details: None                                                      |
+
+```
+
