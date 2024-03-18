@@ -1105,4 +1105,11 @@ openstack image list
 | Details: None                                                      |
 
 ```
+                                                              --- Neutron ---
+
+OpenStack Networking plug-ins and agents- Plug and unplug ports, create networks or subnets, and provide IP addressing. this use NEC OpenFlow products, Open vSwitch, Linux bridging, Open Virtual Network (OVN) The common agents are L3 (layer 3 ip ), DHCP (dynamic host IP addressing), and a plug-in agent.
+
+
+
+
 
