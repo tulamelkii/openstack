@@ -1109,7 +1109,27 @@ openstack image list
 
 OpenStack Networking plug-ins and agents- Plug and unplug ports, create networks or subnets, and provide IP addressing. this use NEC OpenFlow products, Open vSwitch, Linux bridging, Open Virtual Network (OVN) The common agents are L3 (layer 3 ip ), DHCP (dynamic host IP addressing), and a plug-in agent.
 
+acess to dash
+----------------------------
+1. in </etc/httpd/conf.d/openstack-dashboard.conf>
+   change "WSGIScriptAlias /dashboard /usr/share/openstack-dashboard/openstack_dashboard/wsgi/django.wsgi"
+   to "WSGIScriptAlias /dashboard /usr/share/openstack-dashboard/openstack_dashboard/wsgi.py"
+   because there is no django.wsgi, but wsgi.py on your server.
 
+2. in </etc/httpd/conf.d/openstack-dashboard.conf>
+   change "<Directory /usr/share/openstack-dashboard/openstack_dashboard/wsgi>"
+   to "<Directory /usr/share/openstack-dashboard/openstack_dashboard>"
+   because of the same reason to 1
+
+3. in </etc/openstack-dashboard/local_settings>
+   add "WEBROOT = '/dashboard/'"
+
+4. in </etc/openstack-dashboard/local_settings>
+   change "http://%s/identity/v3"
+   to "http://%s:5000/identity/v3"
+
+good luck
+--------------------------------------------
 
 
 
