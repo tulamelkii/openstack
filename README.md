@@ -54,6 +54,7 @@
 27 - The Cinder api authenticates Keystone whether the token is valid and returns the verification result.
 
 28 - The token verification is passed, and nova-compute receives information about the permanent storage of the virtual machine.
+
 29 - Nova-compute calls the configured virtualization driver to create a virtual machine based on instance information.
 
 
