@@ -1375,18 +1375,52 @@ username = nova
 password = <password>                      # password
 
 ```
-edit 
-
+edit lock
+```
+[oslo_concurrency]
 lock_path = /var/lib/neutron/tmp
+```
+## Configure the Modular Layer 2 (ML2) plug-in
+The ML2 plug-in uses the Linux bridge mechanism to build layer-2 (bridging and switching) virtual networking infrastructure for instances.
 
+- Edit the /etc/neutron/plugins/ml2/ml2_conf.ini
+- add section "enable flat, VLAN, and VXLAN networks"
+ ```
+ [ml2]
+type_drivers = flat,vlan,vxlan
+```
+- add section  "enable VXLAN"
+```
+[ml2]
+tenant_network_types = vxlan
+```
+- add section  "enable the Linux bridge and layer-2"
+```
+[ml2]
+mechanism_drivers = openvswitch,l2population
+```
+-  add section "the port security extension driver"
+```
+[ml2]
+extension_drivers = port_security
+```
+- section, configure the provider virtual network 
+```
+[ml2_type_flat]
+flat_networks = provider
+```
+- range for self-service networks:
+```
+[ml2_type_vxlan]
+vni_ranges = 1:1000
+```
+## Configure the Open vSwitch agent
+The Linux bridge agent builds layer-2 (bridging and switching) virtual networking infrastructure for instances and handles security groups
+- Edit the /etc/neutron/plugins/ml2/openvswitch_agent.ini
 
-
-
-
-
-
-
-
+```
+[ovs]
+bridge_mappings = provider:<external ip>    # provider
 
 
 acess to dash
