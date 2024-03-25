@@ -1,6 +1,9 @@
+
+![ Openstack] (https://images2015.cnblogs.com/blog/947529/201609/947529-20160913162520398-1054915693.png)
+
 - dnf config-manager --enable crb # enable full packages for centos(this if extra package)
 - yum update
-- change   vim /etc/chrony.conf and add server for ntp
+- change   vim /etc/chrony.conf and add server for ntp and location
 ```
 pool ntp0.ntp-servers.net iburst
 ```
