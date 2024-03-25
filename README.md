@@ -1197,6 +1197,123 @@ nova-novncproxy daemon -vnc Provides a proxy for accessing running instances thr
 
 nova-spicehtml5proxy daemon Provides a proxy for accessing running instances through a SPICE connection
 
+                                                            For Controller
+                                                            
+
+ - create db
+```
+mysql -u root -p
+MariaDB [(none)]> CREATE DATABASE neutron;
+```
+- grant access
+```
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' \
+  IDENTIFIED BY '<password>';                                                               # password
+MariaDB [(none)]> GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' \  
+  IDENTIFIED BY '<password>';                                                               # password
+```
+go admin openrc
+
+```
+ . admin-openrc
+```
+- create user netron
+```
+openstack user create --domain default --password-prompt neutron
+User Password:
+Repeat User Password:
++---------------------+----------------------------------+
+| Field               | Value                            |
++---------------------+----------------------------------+
+| domain_id           | default                          |
+| enabled             | True                             |
+| id                  | fdb0f541e28141719b6a43c8944bf1fb |
+| name                | neutron                          |
+| options             | {}                               |
+| password_expires_at | None                             |
++---------------------+----------------------------------+
+```
+- add role for user neutron
+```
+openstack role add --project service --user neutron admin
+```
+- create neutron service 
+```
+openstack service create --name neutron \
+  --description "OpenStack Networking" network
+
++-------------+----------------------------------+
+| Field       | Value                            |
++-------------+----------------------------------+
+| description | OpenStack Networking             |
+| enabled     | True                             |
+| id          | f71529314dab4a4d8eca427e701d209e |
+| name        | neutron                          |
+| type        | network                          |
++-------------+----------------------------------+
+
+```
+- create endpoins for neutron public
+```
+openstack endpoint create --region RegionOne \
+  network public http://controller:9696
+
++--------------+----------------------------------+
+| Field        | Value                            |
++--------------+----------------------------------+
+| enabled      | True                             |
+| id           | 85d80a6d02fc4b7683f611d7fc1493a3 |
+| interface    | public                           |
+| region       | RegionOne                        |
+| region_id    | RegionOne                        |
+| service_id   | f71529314dab4a4d8eca427e701d209e |
+| service_name | neutron                          |
+| service_type | network                          |
+| url          | http://controller:9696           |
++--------------+----------------------------------+
+
+```
+create ep internal
+```
+
+openstack endpoint create --region RegionOne \
+  network internal http://controller:9696
+
++--------------+----------------------------------+
+| Field        | Value                            |
++--------------+----------------------------------+
+| enabled      | True                             |
+| id           | 09753b537ac74422a68d2d791cf3714f |
+| interface    | internal                         |
+| region       | RegionOne                        |
+| region_id    | RegionOne                        |
+| service_id   | f71529314dab4a4d8eca427e701d209e |
+| service_name | neutron                          |
+| service_type | network                          |
+| url          | http://controller:9696           |
++--------------+----------------------------------+
+```
+- create ep admin
+```
+ openstack endpoint create --region RegionOne \
+  network admin http://controller:9696
+
++--------------+----------------------------------+
+| Field        | Value                            |
++--------------+----------------------------------+
+| enabled      | True                             |
+| id           | 1ee14289c9374dffb5db92a5c112fc4e |
+| interface    | admin                            |
+| region       | RegionOne                        |
+| region_id    | RegionOne                        |
+| service_id   | f71529314dab4a4d8eca427e701d209e |
+| service_name | neutron                          |
+| service_type | network                          |
+| url          | http://controller:9696           |
++--------------+----------------------------------+
+```
+
+
 
 
 
