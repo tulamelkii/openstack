@@ -1107,7 +1107,35 @@ openstack image list
 ```
                                                               --- Neutron ---
 
-OpenStack Networking plug-ins and agents- Plug and unplug ports, create networks or subnets, and provide IP addressing. this use NEC OpenFlow products, Open vSwitch, Linux bridging, Open Virtual Network (OVN) The common agents are L3 (layer 3 ip ), DHCP (dynamic host IP addressing), and a plug-in agent.
+
+OpenStack Networking plug-ins and agents- Plug and unplug ports, create networks or subnets, and provide IP addressing. this 
+
+use NEC OpenFlow products, Open vSwitch, Linux bridging, Open Virtual Network (OVN) The common agents are L3 (layer 3 ip ), 
+
+DHCP (dynamic host IP addressing), and a plug-in agent.
+
+- nova-api service-Accepts and responds to end user compute API calls. The service supports the OpenStack Compute API
+
+- nova-api-metadata service - The metadata service supports two sets of APIs - an OpenStack metadata API and an EC2-compatible API and also exposes vendordata and user data
+
+- nova-compute service  - daemon that creates and terminates virtual machine instances through hypervisor(libvirt for KVM or QEMU)
+
+- nova-scheduler service - Takes a virtual machine instance request from the queue and Определяет on which compute server host it runs.
+
+- nova-conductor module - The nova-conductor module scales horizontally. However, do not deploy it on nodes where the nova-compute service runs.
+
+nova-novncproxy daemon -vnc Provides a proxy for accessing running instances through a VNC connection
+
+nova-spicehtml5proxy daemon Provides a proxy for accessing running instances through a SPICE connection
+
+
+
+
+
+
+
+
+
 
 acess to dash
 ----------------------------
