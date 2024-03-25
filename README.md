@@ -1,5 +1,5 @@
 
-![ Openstack] (https://images2015.cnblogs.com/blog/947529/201609/947529-20160913162520398-1054915693.png)
+![Openstack](https://images2015.cnblogs.com/blog/947529/201609/947529-20160913162520398-1054915693.png)
 
 - dnf config-manager --enable crb # enable full packages for centos(this if extra package)
 - yum update
