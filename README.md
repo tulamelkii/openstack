@@ -46,9 +46,13 @@
 21 - The glance api authenticates to keystone whether the token is valid and returns the verification result.
 
 22 - The token verification is passed, and nova-compute receives information about the virtual machine image (URL).
+
 23 - Nova-compute receives the k authentication token via the keystone RESTfull API and requests the neutron server via HTTP to obtain the network information necessary to create a virtual machine.
+
 24 - The neutron server authenticates with keystone whether the token is valid and returns the verification result.
+
 25 - The token verification is passed, and nova-compute receives information about the virtual machine network.
+
 26 - Nova-compute receives an authenticated token via the RESTfull keystone API and receives the persistent storage information needed to create a virtual machine via an HTTP request from the cinder api.
  
 27 - The Cinder api authenticates Keystone whether the token is valid and returns the verification result.
