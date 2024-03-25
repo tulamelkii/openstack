@@ -14,10 +14,15 @@
 6 - After passing the certification, the nova api is linked to the database.
 
 7 - Initialize the database entry of the newly created VM. 
+
 8 - The nova api requests nova-scheduler via rpc.call if there is a resource (host ID) to create a VM.
+
 9 - The nova-scheduler process listens to the message queue to receive nova api requests.
+
 10 - nova-scheduler requests computing resources in the nova database and calculates hosts that meet the needs of creating a virtual machine using a scheduling algorithm.
+
 11 - For hosts that correspond to the creation of virtual machines, nova-scheduler updates the information about the physical host corresponding to the virtual machines in the database.
+
 12 - The nova scheduler sends nova-compute a corresponding request to create a virtual machine via rpc.cast.
 
 13 - Nova-compute will receive a message about the request to create a VM from the corresponding message queue.
