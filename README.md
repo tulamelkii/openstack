@@ -1,5 +1,5 @@
 
-![Openstack]()
+![Openstack](https://github.com/tulamelkii/openstack/blob/main/Openstack.png)
 
 - dnf config-manager --enable crb # enable full packages for centos(this if extra package)
 - yum update
