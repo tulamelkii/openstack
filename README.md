@@ -1445,5 +1445,5 @@ acess to dash
 good luck
 --------------------------------------------
 
-
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 
