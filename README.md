@@ -796,6 +796,7 @@ MariaDB [(none)]> GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' \          
 ```
  
 . admin-openrc
+
 - create computer service credentional(create nova instance)
 ```
  openstack user create --domain default --password-prompt nova
@@ -938,7 +939,7 @@ password = NOVA_PASS
 ```
 [DEFAULT]
 # ...
-my_ip = <ip for managment interface>
+my_ip = <ip for managment interface>  ## external
 ```
 - enable vnc
 ```
@@ -1312,6 +1313,71 @@ openstack endpoint create --region RegionOne \
 | url          | http://controller:9696           |
 +--------------+----------------------------------+
 ```
+- Networking provders and we use 2 options
+  
+  Networking Option 1: Provider networks
+  
+  Networking Option 2: Self-service networks
+
+- install the components
+```
+  yum install openstack-neutron openstack-neutron-ml2 openstack-neutron-openvswitch ebtables
+```
+- Edit /etc/neutron/neutron.conf
+```
+[database]
+connection = mysql+pymysql://neutron:<password>@<host:port>/neutron  # add password and host port
+```
+- add preference  Modular Layer 2 (ML2) plug-in, router service
+```
+[DEFAULT]
+core_plugin = ml2
+service_plugins = router
+```
+ - add configure RabbitMQ
+```
+[DEFAULT]
+transport_url = rabbit://openstack:<password>@<host>   # pass + host
+```
+ - edit keystone preference autotocken
+```
+[DEFAULT]
+auth_strategy = keystone
+
+[keystone_authtoken]
+
+www_authenticate_uri = http://<host>:5000      # host auth
+auth_url = http://<host>:5000                  # host auth           
+memcached_servers = <host>:11211               # memcached  host 
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+project_name = service
+username = neutron
+password = < password>                         # password
+```
+- nova section 
+
+```
+[DEFAULT]
+notify_nova_on_port_status_changes = true          # "enable change status for nova"
+notify_nova_on_port_data_changes = true
+
+
+[nova]
+auth_url = http://<hostname>:5000          #host for auth nova
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+region_name = RegionOne
+project_name = service
+username = nova
+password = <password>                      # password
+
+```
+edit 
+
+lock_path = /var/lib/neutron/tmp
 
 
 
