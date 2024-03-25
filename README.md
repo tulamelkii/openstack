@@ -1,6 +1,62 @@
 
 ![Openstack](https://github.com/tulamelkii/openstack/blob/main/Openstack.png)
 
+1 - An interface or command line for obtaining authentication information from keystone via the RESTful API. 
+
+2 - Keystone requests authentication information from users and generates a token to return to the corresponding authentication request.
+
+3 - The interface or command line sends a download instance request (with an authentication token) to the nova api via the RESTful API.
+
+4 - After receiving the request, the nova api sends an authentication request to keystone to verify whether the token is a valid user and token.
+
+5 - Keystone checks whether the token is valid. If it is valid, it returns valid authentication and the corresponding role (Note. Some operations require role permissions).
+
+6 - After passing the certification, the nova api is linked to the database.
+
+7 - Initialize the database entry of the newly created VM. 
+8 - The nova api requests nova-scheduler via rpc.call if there is a resource (host ID) to create a VM.
+9 - The nova-scheduler process listens to the message queue to receive nova api requests.
+10 - nova-scheduler requests computing resources in the nova database and calculates hosts that meet the needs of creating a virtual machine using a scheduling algorithm.
+11 - For hosts that correspond to the creation of virtual machines, nova-scheduler updates the information about the physical host corresponding to the virtual machines in the database.
+12 - The nova scheduler sends nova-compute a corresponding request to create a virtual machine via rpc.cast.
+
+13 - Nova-compute will receive a message about the request to create a VM from the corresponding message queue.
+
+14 - Nova-compute requests nova-wire to get information about the VM via rpc.call. (Flavor)
+
+
+
+15 - The Nova receiver receives the nova-compute request message from the message queue.
+
+16 - The new explorer requests information corresponding to the virtual machine based on the message.
+
+17 - Nova Explorer receives the relevant information about the virtual machine from the database.
+
+18 - The new explorer sends information about the virtual machine to the message queue.
+
+19 - Nova-compute receives information messages from the virtual machine from the corresponding message queue.
+
+20 - Nova-compute receives an authenticated token via the RESTfull keystone API and receives the image needed to create a virtual machine via an HTTP request from the glance api.
+
+21 - The glance api authenticates to keystone whether the token is valid and returns the verification result.vvvvvvvvvvvvvvvvv
+
+22 - The token verification is passed, and nova-compute receives information about the virtual machine image (URL).
+23 - Nova-compute receives the k authentication token via the keystone RESTfull API and requests the neutron server via HTTP to obtain the network information necessary to create a virtual machine.
+24 - The neutron server authenticates with keystone whether the token is valid and returns the verification result.
+25 - The token verification is passed, and nova-compute receives information about the virtual machine network.
+26 - Nova-compute receives an authenticated token via the RESTfull keystone API and receives the persistent storage information needed to create a virtual machine via an HTTP request from the cinder api.
+ 
+27 - The Cinder api authenticates Keystone whether the token is valid and returns the verification result.
+
+28 - The token verification is passed, and nova-compute receives information about the permanent storage of the virtual machine.
+29 - Nova-compute calls the configured virtualization driver to create a virtual machine based on instance information.
+
+
+
+
+
+
+
 - dnf config-manager --enable crb # enable full packages for centos(this if extra package)
 - yum update
 - change   vim /etc/chrony.conf and add server for ntp and location
