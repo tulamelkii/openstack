@@ -43,7 +43,7 @@
 
 20 - Nova-compute receives an authenticated token via the RESTfull keystone API and receives the image needed to create a virtual machine via an HTTP request from the glance api.
 
-21 - The glance api authenticates to keystone whether the token is valid and returns the verification result.vvvvvvvvvvvvvvvvv
+21 - The glance api authenticates to keystone whether the token is valid and returns the verification result.
 
 22 - The token verification is passed, and nova-compute receives information about the virtual machine image (URL).
 23 - Nova-compute receives the k authentication token via the keystone RESTfull API and requests the neutron server via HTTP to obtain the network information necessary to create a virtual machine.
