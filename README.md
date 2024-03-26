@@ -1485,6 +1485,95 @@ openstack network agent list
 +--------------------------------------+--------------------+------+-------------------+-------+-------+---------------------------+
 
 
+                                                            --dashbord--
+                                                            
+- install dashbord
+```
+yum install openstack-dashboard
+```
+- Edit the /etc/openstack-dashboard/local_settings
+- allow host for dashbord who can connect 
+```
+ALLOWED_HOSTS = ['*', 'localhost']
+```
+- edit preference . add WEBROOT = '/dashboard/'
+```
+OPENSTACK_HOST = "Only"
+OPENSTACK_KEYSTONE_URL = "http://Only:5000"
+WEBROOT = '/dashboard/'                        ##!!!!
+LOGIN_URL = '/dashboard/auth/login/'
+LOGOUT_URL = '/dashboard/auth/logout/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+```
+- change Cash for File!!
+```
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'     ##!(error cash session )
+
+CACHES = {
+    'default': {
+         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+         'LOCATION': '<host>:11211',                           #change host
+    }
+}
+```
+- add api version 
+```
+OPENSTACK_API_VERSIONS = {
+    "identity": 3,
+    "image": 2,
+    "volume": 3,
+}
+```
+Default domain and rules for user
+```
+OPENSTACK_KEYSTONE_DEFAULT_DOMAIN = "Default"
+OPENSTACK_KEYSTONE_DEFAULT_ROLE = "admin"
+OPENSTACK_NEUTRON_NETWORK = {
+```
+if you use l3 enable
+```
+    'enable_router': True,
+    'enable_quotas': True,
+    'enable_ipv6': True,
+    'enable_distributed_router': True,
+    'enable_ha_router': True,
+    'enable_fip_topology_check': True,
+}
+
+```
+- add time zone
+```
+TIME_ZONE = " Europe/Moscow"
+```
+- add  /etc/httpd/conf.d/openstack-dashboard.conf
+```
+WSGIApplicationGroup %{GLOBAL}
+```
+change path py !!
+```
+WSGIScriptAlias /dashboard /usr/share/openstack-dashboard/openstack_dashboard/wsgi.py   # change path
+```
+- and change directory !! /etc/httpd/conf.d/openstack-dashboard.conf
+```
+<Directory /usr/share/openstack-dashboard/openstack_dashboard/>
+```
+restart hhtpd
+```
+systemctl restart httpd.service memcached.service
+```
+# check dash
+-http://<host>/dashboard
+- user: admin:
+...
+                                                       --prublem--
+# Literature for errors cash
+- https://programmerall.com/article/14441163019/
+```
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+```
+error for dash
+```
 acess to dash
 ----------------------------
 1. in </etc/httpd/conf.d/openstack-dashboard.conf>
@@ -1503,6 +1592,8 @@ acess to dash
 4. in </etc/openstack-dashboard/local_settings>
    change "http://%s/identity/v3"
    to "http://%s:5000/identity/v3"
+```
+
 
 good luck
 --------------------------------------------
