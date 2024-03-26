@@ -1415,24 +1415,74 @@ flat_networks = provider
 vni_ranges = 1:1000
 ```
 ## Configure the Open vSwitch agent
+
 The Linux bridge agent builds layer-2 (bridging and switching) virtual networking infrastructure for instances and handles security groups
 - Edit the /etc/neutron/plugins/ml2/openvswitch_agent.ini
-
 ```
-[ovs]
-bridge_mappings = provider:<external ip>    # provider
-```
-
 [vxlan]
-local_ip = OVERLAY_INTERFACE_IP_ADDRESS
+local_ip = <external_ip>          #change external ip
 l2_population = true
 
 [securitygroup]
-# ...
 enable_security_group = true
 firewall_driver = openvswitch
 
+[ovs]
+physical_interface_mappings = provider:enp6s18
+```
+## Configure the layer-3 agent
 
+- Edit the /etc/neutron/l3_agent.ini
+```
+[DEFAULT]
+interface_driver = openvswitch
+```
+## Configure the DHCP agent
+
+- Edit the /etc/neutron/dhcp_agent.ini
+
+```
+[DEFAULT]
+interface_driver = openvswitch
+dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq
+enable_isolated_metadata = true
+```
+## Configure the Compute service to use the Networking service
+
+Edit the /etc/nova/nova.conf
+```
+[neutron]
+auth_url = http://Only:5000        #change host
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+region_name = RegionOne
+project_name = service
+username = neutron
+password = <password>             #change password
+service_metadata_proxy = true
+```
+- Sync DB for neutron.conf and ml2_conf 
+```
+su -s /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf \
+  --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head" neutron
+```
+restart service  
+
+```
+systemctl restart neutron-server neutron-openvswitch-agent  neutron-dhcp-agent  neutron-metadata-agent neutron-l3-agent
+```
+
+# Check service Open vSwitch agent DHCP agent L3 agent  Metadata agent 
+openstack network agent list
++--------------------------------------+--------------------+------+-------------------+-------+-------+---------------------------+
+| ID                                   | Agent Type         | Host | Availability Zone | Alive | State | Binary                    |
++--------------------------------------+--------------------+------+-------------------+-------+-------+---------------------------+
+| 1a030327-9378-4e3a-8a13-243bcc66f753 | Open vSwitch agent | Only | None              | :-)   | UP    | neutron-openvswitch-agent |
+| 2c5a2b61-40c7-44f5-bff0-3df357116a10 | DHCP agent         | Only | nova              | :-)   | UP    | neutron-dhcp-agent        |
+| 5ec2e854-e326-4d35-9f44-e82d914645ec | L3 agent           | Only | nova              | :-)   | UP    | neutron-l3-agent          |
+| f5cda2b1-c193-410a-b2f3-6eab2fac3060 | Metadata agent     | Only | None              | :-)   | UP    | neutron-metadata-agent    |
++--------------------------------------+--------------------+------+-------------------+-------+-------+---------------------------+
 
 
 acess to dash
