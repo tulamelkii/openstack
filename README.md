@@ -1421,6 +1421,18 @@ The Linux bridge agent builds layer-2 (bridging and switching) virtual networkin
 ```
 [ovs]
 bridge_mappings = provider:<external ip>    # provider
+```
+
+[vxlan]
+local_ip = OVERLAY_INTERFACE_IP_ADDRESS
+l2_population = true
+
+[securitygroup]
+# ...
+enable_security_group = true
+firewall_driver = openvswitch
+
+
 
 
 acess to dash
@@ -1444,6 +1456,9 @@ acess to dash
 
 good luck
 --------------------------------------------
+
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 
