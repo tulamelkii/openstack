@@ -1519,7 +1519,7 @@ OPENSTACK_KEYSTONE_URL = "http://Only:5000"
 WEBROOT = '/dashboard/'                        ##!!!!
 LOGIN_URL = '/dashboard/auth/login/'
 LOGOUT_URL = '/dashboard/auth/logout/'
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/dashboard/' ?
 ```
 - change Cash for File!!
 ```
@@ -1581,7 +1581,7 @@ systemctl restart httpd.service memcached.service
 -http://<host>/dashboard
 - user: admin:
 ...
-                                                       --prublem--
+                                                       --problem--
 # Literature for errors cash
 - https://programmerall.com/article/14441163019/
 ```
@@ -1609,7 +1609,13 @@ acess to dash
    change "http://%s/identity/v3"
    to "http://%s:5000/identity/v3"
 ```
+                                               --Heat-
 
+
+
+
+
+                                               
 
 good luck
 --------------------------------------------
