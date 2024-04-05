@@ -946,8 +946,10 @@ my_ip = <ip for managment interface>  ## external
 [vnc]
 enabled = true
 # ...
-server_listen = $my_ip
-server_proxyclient_address = $my_ip
+enabled = true
+server_listen = 127.0.0.1
+server_proxyclient_address = 127.0.0.1
+novncproxy_base_url = http://<host_ip>:6080/vnc_auto.html # vnc host ip
 ```
 - add glance server 
 
@@ -975,6 +977,20 @@ auth_url = http://<host>:5000/v3          #change host
 username = placement
 password = <password>                     # change password
 ```
+add neutron section 
+```
+[neutron]
+www_authenticate_uri http://<host_ip>:5000/v3
+auth_url = http://<host_ip>:5000/v3
+auth_type = password
+project_domain_name = Default
+user_domain_name = Default
+region_name = RegionOne
+project_name = service
+username = neutron
+password = 1qaz2wsx
+```
+
 - Register cell0 ( responsible for coordinating actions between different cells ) main cell 
  ```
 su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
