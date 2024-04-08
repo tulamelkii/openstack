@@ -1680,6 +1680,105 @@ openstack user create --domain heat --password-prompt heat_domain_admin
 ```
 openstack role add --domain heat --user-domain heat --user heat_domain_admin admin
 ```
+- create owner role "heat_stack_owner"
+  
+```
+openstack role create heat_stack_owner
+```
+- create role for user demo in project demo ( role heat_stack_owner)
+```
+openstack role add --project demo --user demo heat_stack_owner
+```
+- Create the (heat_stack_owner) role
+```
+openstack role create heat_stack_owner
+```
+- add role (heat_stack_owner) for project user demo
+```
+openstack role add --project demo --user demo heat_stack_owner
+```
+- Create the heat_stack_user role
+```
+openstack role create heat_stack_user
+```
+
+- install openstack-heat-api openstack-heat-api-cfn openstack-heat-engine
+```
+yum install openstack-heat-api openstack-heat-api-cfn openstack-heat-engine
+```
+- change preference /etc/heat/heat.conf 
+- create db
+```
+[database]
+...
+connection = mysql+pymysql://heat:<pass>@<host>/heat
+```
+- create transport rabbit
+``` 
+[DEFAULT]
+...
+transport_url = rabbit://openstack:<pass_rabbit>@<host>
+```
+- create autotoken
+```
+[keystone_authtoken]
+...
+www_authenticate_uri = http://<host>:5000
+auth_url = http://<host>:5000
+memcached_servers = <host>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = heat
+password = <pass>
+```
+???
+```
+[trustee]
+...
+auth_type = password
+auth_url = http://controller:5000
+username = heat
+password = HEAT_PASS
+user_domain_name = default
+```
+???
+```
+[clients_keystone]
+...
+auth_uri = http://controller:5000
+```
+- configure metadata 
+
+```
+[DEFAULT]
+...
+heat_metadata_server_url = http://<host>:8000
+heat_waitcondition_server_url = http://<host>:8000/v1/waitcondition
+```
+- add to domain user 
+```
+
+[DEFAULT]
+...
+stack_domain_admin = heat_domain_admin
+stack_domain_admin_password = <pass>
+stack_user_domain_name = heat
+```
+- sync db
+```
+su -s /bin/sh -c "heat-manage db_sync" heat
+```
+- enable service 
+```
+systemctl enable openstack-heat-api.service openstack-heat-api-cfn.service openstack-heat-engine.service
+```
+- start service
+
+```
+systemctl start openstack-heat-api.service openstack-heat-api-cfn.service openstack-heat-engine.service
+```
 
 good luck
 --------------------------------------------
