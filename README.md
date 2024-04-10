@@ -1919,8 +1919,87 @@ GRANT ALL PRIVILEGES ON barbican.* TO 'barbican'@'%' IDENTIFIED BY '1qaz2wsx';
 ```
 openstack user create --domain default --password-prompt barbican
 ```
-
+- Add the admin role to the barbican user
+```
 openstack role add --project service --user barbican admin
+```
+- Create the creator role:
+```
+openstack role create creator
+
+```
+- Add the creator role to the barbican user
+```
+openstack role add --project service --user barbican creator
+```
+- Create the barbican service entities:
+```
+openstack service create --name barbican --description "Key Manager" key-manager
+```
+- create endpoint for barbican
+```
+openstack endpoint create --region RegionOne key-manager public http://<host>:9311                   # change host
+openstack endpoint create --region RegionOne key-manager internal http://<host>:9311                 # change host
+openstack endpoint create --region RegionOne key-manager admin http://<host>:9311
+```
+
+- install barbican 
+```
+yum install openstack-barbican-api
+```
+change /etc/barbican/barbican.conf
+```
+[DEFAULT]
+...
+sql_connection = mysql+pymysql://barbican:<password>@<host>/barbican   # change password and host
+
+[DEFAULT]
+...
+transport_url = rabbit://openstack:<password>@<host>
+```
+
+change /etc/barbican/barbican.conf authtoken
+```
+[keystone_authtoken]
+...
+www_authenticate_uri = http://<host>:5000
+auth_url = http://<host>:5000
+memcached_servers = <host>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = barbican
+password = <password>
+```
+- sync db barbican
+
+```
+su -s /bin/sh -c "barbican-manage db upgrade" barbican
+```
+- create folder /etc/httpd/conf.d/wsgi-barbican.conf and change preference
+```
+  <VirtualHost [::1]:9311>
+    ServerName controller
+
+    ## Logging
+    ErrorLog "/var/log/httpd/barbican_wsgi_main_error_ssl.log"
+    LogLevel debug
+    ServerSignature Off
+    CustomLog "/var/log/httpd/barbican_wsgi_main_access_ssl.log" combined
+
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIDaemonProcess barbican-api display-name=barbican-api group=barbican processes=2 threads=8 user=barbican
+    WSGIProcessGroup barbican-api
+    WSGIScriptAlias / "/usr/lib/python2.7/site-packages/barbican/api/app.wsgi"
+    WSGIPassAuthorization On
+</VirtualHost>
+```
+enabled service
+```
+systemctl enable httpd.service
+systemctl start httpd.service
+```
 
 good luck
 --------------------------------------------
