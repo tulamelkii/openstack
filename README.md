@@ -1850,6 +1850,58 @@ openstack stack list
 | e4a77a42-108e-46ff-9588-d08c275d14fa | stack      | ef0fc1864fe74a57bf618baa1331dddf | CREATE_COMPLETE | 2024-04-08T10:38:46Z | None         |
 +--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
 ```
+create instance example
+```
+heat_template_version: 2021-04-16
+description: only stack
+
+parameters:
+  key_pair_name:
+    type: string
+    label: key
+    description: for_key
+    default: for_wm
+  image_id:
+    type: string
+    label: deb_11
+    description: images deb
+    default: deb
+  image_cent:
+    type: string
+    label: centos
+    description: images cent
+    default: Centos7
+  instance_type:
+    type: string
+    label: vm2
+    description: flavor for instance 2cpu_2mem
+    default: vm2
+  network_id:
+    type: string
+    label: Net
+    description: network
+    default: InternalNet
+resources:
+  instance:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_id }
+      flavor: { get_param: instance_type }
+      key_name: { get_param: key_pair_name }
+      networks:
+        - network: { get_param: network_id }
+  my_inst:
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_cent }
+      flavor: { get_param: instance_type }
+      key_name: { get_param: key_pair_name }
+      networks:
+        - network: { get_param: network_id }
+```
+
+                                                                           
+
 
 good luck
 --------------------------------------------
