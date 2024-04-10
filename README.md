@@ -1995,11 +1995,117 @@ su -s /bin/sh -c "barbican-manage db upgrade" barbican
     WSGIPassAuthorization On
 </VirtualHost>
 ```
-enabled service
+- enabled service
 ```
 systemctl enable httpd.service
 systemctl start httpd.service
 ```
+- check secret 
+```
+openstack secret list
++-----------------------------------------------------------------------+----------+---------------------------+--------+-----------------------------------------+-----------+------------+-------------+------+------------+
+| Secret href                                                           | Name     | Created                   | Status | Content types                           | Algorithm | Bit length | Secret type | Mode | Expiration |
++-----------------------------------------------------------------------+----------+---------------------------+--------+-----------------------------------------+-----------+------------+-------------+------+------------+
+| http://localhost:9311/v1/secrets/935db1f4-904c-411d-951b-64d2511d2713 | mysecret | 2024-04-09T14:14:23+00:00 | ACTIVE | {'default': 'application/octet-stream'} | aes       |        256 | opaque      | cbc  | None       |
+| http://localhost:9311/v1/secrets/7a7ce42f-fa63-4970-8a5a-0704f71b5a22 | None     | 2024-04-09T14:49:42+00:00 | ACTIVE | {'default': 'application/octet-stream'} | aes       |        256 | opaque      | cbc  | None       |
++-----------------------------------------------------------------------+----------+---------------------------+--------+-----------------------------------------+-----------+------------+-------------+------+------------+
+```
+- create secret file example 
+```
+ openstack secret store --name mysec --file new_template.yaml
++---------------+-----------------------------------------------------------------------+
+| Field         | Value                                                                 |
++---------------+-----------------------------------------------------------------------+
+| Secret href   | http://localhost:9311/v1/secrets/3f2c6f4d-50e2-44f5-95f7-abd2b0d310b5 |
+| Name          | mysec                                                                 |
+| Created       | None                                                                  |
+| Status        | None                                                                  |
+| Content types | None                                                                  |
+| Algorithm     | aes                                                                   |
+| Bit length    | 256                                                                   |
+| Secret type   | opaque                                                                |
+| Mode          | cbc                                                                   |
+| Expiration    | None                                                                  |
++---------------+-----------------------------------------------------------------------+
+```
+- watch secret 
+
+```
+openstack secret get --payload  http://localhost:9311/v1/secrets/3f2c6f4d-50e2-44f5-95f7-abd2b0d310b5
++---------+-------------------------------------------------------+
+| Field   | Value                                                 |
++---------+-------------------------------------------------------+
+| Payload | heat_template_version: 2021-04-16                     |
+|         | description: only stack                               |
+|         |                                                       |
+|         | parameters:                                           |
+|         |   key_pair_name:                                      |
+|         |     type: string                                      |
+|         |     label: key                                        |
+|         |     description: for_key                              |
+|         |     default: for_wm                                   |
+|         |   image_id:                                           |
+|         |     type: string                                      |
+|         |     label: deb_11                                     |
+|         |     description: images deb                           |
+|         |     default: deb                                      |
+|         |   image_cent:                                         |
+|         |     type: string                                      |
+|         |     label: centos                                     |
+|         |     description: images cent                          |
+|         |     default: Centos7                                  |
+|         |   instance_type:                                      |
+|         |     type: string                                      |
+|         |     label: vm2                                        |
+|         |     description: flavor for instance 2cpu_2mem        |
+|         |     default: vm2                                      |
+|         |   network_id:                                         |
+|         |     type: string                                      |
+|         |     label: Net                                        |
+|         |     description: network                              |
+|         |     default: InternalNet                              |
+|         | resources:                                            |
+|         |   Group_of_VMs:                                       |
+|         |     type: OS::Heat::ResourceGroup                     |
+|         |     properties:                                       |
+|         |       count: 4                                        |
+|         |       resource_def:                                   |
+|         |         instance:                                     |
+|         |           type: OS::Nova::Server                      |
+|         |           properties:                                 |
+|         |             image: { get_param: image_id }            |
+|         |             flavor: { get_param: instance_type }      |
+|         |             key_name: { get_param: key_pair_name }    |
+|         |             networks:                                 |
+|         |             - network: { get_param: network_id }      |
+|         |                                                       |
+|         |               # my_inst:                              |
+|         |               #type: OS::Nova::Server                 |
+|         |               # properties:                           |
+|         |               #image: { get_param: image_cent }       |
+|         |               #flavor: { get_param: instance_type }   |
+|         |               #key_name: { get_param: key_pair_name } |
+|         |               #networks:                              |
+|         |               #- network: { get_param: network_id }   |
+|         |                                                       |
++---------+-------------------------------------------------------+
+```
+Secret types
+
+There are a few types of secrets that are handled by barbican:
+
+- symmetric - Used for storing byte arrays such as keys suitable for symmetric encryption.
+- public - Used for storing the public key of an asymmetric keypair.
+- private - Used for storing the private key of an asymmetric keypair.
+- passphrase - Used for storing plain text passphrases.
+- certificate - Used for storing cryptographic certificates such as X.509 certificates.
+- opaque - Used for backwards compatibility with previous versions of the API without typed secrets. New applications are encouraged to specify one of the other secret types.
+
+create test secret  passphrase
+```
+openstack secret store --secret-type passphrase --name "test passphrase" --payload 'aVerYSecreTTexT!'
+```
+
 
 good luck
 --------------------------------------------
