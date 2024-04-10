@@ -1779,6 +1779,77 @@ systemctl enable openstack-heat-api.service openstack-heat-api-cfn.service opens
 ```
 systemctl start openstack-heat-api.service openstack-heat-api-cfn.service openstack-heat-engine.service
 ```
+- check system
+``` 
+
+ openstack orchestration service list
++----------+-------------+--------------------------------------+------+--------+----------------------------+--------+
+| Hostname | Binary      | Engine ID                            | Host | Topic  | Updated At                 | Status |
++----------+-------------+--------------------------------------+------+--------+----------------------------+--------+
+| Only     | heat-engine | 78244f29-e9f6-432d-aa12-8e33033e0516 | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | dce65004-ae3c-4764-9452-b6751c355b43 | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | 8df0aa21-f2b6-4d5f-a990-dd5d734d59df | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | 5673e9e1-1eef-4eeb-b648-7311ca961e73 | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | 7d3aec66-a9d4-41c1-8f3a-8fa0e6bb10a0 | Only | engine | 2024-04-10T06:09:55.000000 | up     |
+| Only     | heat-engine | 9ef6ee63-eba6-4206-979f-972692fb4086 | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | 8d6ecdd7-0737-4e1d-b761-daf18f6682ed | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | 810e9d14-e05a-46d4-b919-026f77ecda18 | Only | engine | 2024-04-10T06:09:55.000000 | up     |
+| Only     | heat-engine | 810b8a45-c5de-4ca0-b628-cd22171b7f4d | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | 4cf523b8-6118-4e32-a141-308289e3729d | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | 83ac838d-67c7-4c5a-96d6-89c3dc46c450 | Only | engine | 2024-04-10T06:10:48.000000 | up     |
+| Only     | heat-engine | bd1a2559-45b0-4b4b-a11f-f4379103742d | Only | engine | 2024-04-10T06:09:55.000000 | up     |
++----------+-------------+--------------------------------------+------+--------+----------------------------+--------+
+```
+- create instance
+```
+heat_template_version: 2015-10-15
+description: Launch a basic instance with CirrOS image using the
+             ``m1.tiny`` flavor, ``mykey`` key,  and one network.
+
+parameters:
+  NetID:
+    type: string
+    description: Network ID to use for the instance.
+
+resources:
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: cirros
+      flavor: m1.tiny
+      key_name: mykey
+      networks:
+      - network: { get_param: NetID }
+
+outputs:
+  instance_name:
+    description: Name of the instance.
+    value: { get_attr: [ server, name ] }
+  instance_ip:
+    description: IP address of the instance.
+    value: { get_attr: [ server, first_address ] }
+```
+created instanse
+```
+ openstack network list
++--------------------------------------+-------------+--------------------------------------+
+| ID                                   | Name        | Subnets                              |
++--------------------------------------+-------------+--------------------------------------+
+| 8f18c04e-3143-484c-b5f2-2762fd4c5e65 | InternalNet | 0f2f8db2-1875-4ae8-a46f-18764a40d095 |
+| c205593e-d1c6-446d-9166-03b26a532b25 | ExternalNet | 46b48ee1-74d5-46e0-a4bb-951c5a63a806 |
++--------------------------------------+-------------+--------------------------------------+
+```
+export NET_ID=$(openstack network list | awk '/ Internal / { print $2 }')
+
+```
+openstack stack list
+
++--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
+| ID                                   | Stack Name | Project                          | Stack Status    | Creation Time        | Updated Time |
++--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
+| e4a77a42-108e-46ff-9588-d08c275d14fa | stack      | ef0fc1864fe74a57bf618baa1331dddf | CREATE_COMPLETE | 2024-04-08T10:38:46Z | None         |
++--------------------------------------+------------+----------------------------------+-----------------+----------------------+--------------+
+```
 
 good luck
 --------------------------------------------
