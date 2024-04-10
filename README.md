@@ -1900,8 +1900,27 @@ resources:
         - network: { get_param: network_id }
 ```
 
-                                                                           
+                                                              --barbican--
+- create mysql
+```
+sudo mysql -u root -p
+```
+- create database
+```
+ CREATE DATABASE barbican;
+```
+- add privileges
 
+```
+GRANT ALL PRIVILEGES ON barbican.* TO 'barbican'@'localhost' IDENTIFIED BY '1qaz2wsx';
+GRANT ALL PRIVILEGES ON barbican.* TO 'barbican'@'%' IDENTIFIED BY '1qaz2wsx';
+```                                                                           
+- create user
+```
+openstack user create --domain default --password-prompt barbican
+```
+
+openstack role add --project service --user barbican admin
 
 good luck
 --------------------------------------------
