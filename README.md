@@ -1609,6 +1609,63 @@ acess to dash
    change "http://%s/identity/v3"
    to "http://%s:5000/identity/v3"
 ```
+                                               
+                                               --Cinder--
+
+mysql -u root -p
+
+CREATE DATABASE cinder;
+ 
+GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'localhost' IDENTIFIED BY '<pass>';
+
+GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'%' IDENTIFIED BY '<pass>';
+
+. admin-openrc
+ 
+ openstack user create --domain default --password-prompt cinder
+
+openstack role add --project service --user cinder admin
+
+openstack service create --name cinderv3 --description "OpenStack Block Storage" volumev3
+
+
+
+
+
+[DEFAULT]
+
+transport_url = rabbit://openstack:<pass>@Only
+auth_strategy = keystone
+my_ip = <ip_nternal_host>
+enabled_backends = lvm
+glance_api_servers = http://<host>:9292
+
+
+[lvm]
+volume_driver = cinder.volume.drivers.lvm.LVMVolumeDriver
+volume_group = cinder-volumes
+target_protocol = iscsi
+target_helper = lioadm
+
+[database]
+
+connection = mysql+pymysql://cinder:<pass>@<host>:3306/cinder
+
+[keystone_authtoken]
+
+www_authenticate_uri = http://<host>:5000
+auth_url = http://<host>:5000
+memcached_servers = <host>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = cinder
+password = <pass>
+
+
+
+
                                                --Heat-
 
    ![Openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-05%20100332.png)
