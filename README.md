@@ -2162,6 +2162,143 @@ create test secret  passphrase
 ```
 openstack secret store --secret-type passphrase --name "test passphrase" --payload 'aVerYSecreTTexT!'
 ```
+                                             
+--Ceilometer--
+
+- Create the ceilometer user
+```
+openstack user create --domain default --password-prompt ceilometer
+```
+- Add the admin role to the ceilometer user
+```
+openstack role add --project service --user ceilometer admin
+```
+- Create the ceilometer service
+```
+openstack service create --name ceilometer --description "Telemetry" metering
+```
+- Create the gnocchi user:
+```
+openstack user create --domain default --password-prompt gnocchi
+```
+- Create the gnocchi service
+```
+openstack service create --name gnocchi --description "Metric Service" metric
+```
+- Add the admin role to the gnocchi user
+```
+openstack role add --project service --user gnocchi admin
+```
+- Create the Metric service API endpoint
+```
+openstack endpoint create --region RegionOne metric public http://<host>:8041
+openstack endpoint create --region RegionOne metric internal http://<host>:8041
+openstack endpoint create --region RegionOne metric admin http://<host>:8041
+```
+- Install Gnocchi
+```
+dnf install openstack-gnocchi-api openstack-gnocchi-metricd python3-gnocchiclient
+```
+- create DB gnocchi
+```
+CREATE DATABASE gnocchi;
+```
+- create privileges fot user gnocchi'@'localhost
+```
+GRANT ALL PRIVILEGES ON gnocchi.* TO 'gnocchi'@'localhost' IDENTIFIED BY 'GNOCCHI_DBPASS';
+GRANT ALL PRIVILEGES ON gnocchi.* TO 'gnocchi'@'%' IDENTIFIED BY 'GNOCCHI_DBPASS';
+GRANT ALL PRIVILEGES ON gnocchi.* TO 'gnocchi'@'<host>' IDENTIFIED BY 'GNOCCHI_DBPASS';      # work access + host
+```
+- Change preference /etc/gnocchi/gnocchi.conf
+```
+[DEFAULT]
+log_dir = /var/log/gnocchi
+
+
+[api]
+auth_mode = keystone
+
+[keystone_authtoken]
+www_authenticate_uri = http://<host>:5000/v3
+auth_url = http://<host>:5000/v3
+memcached_servers = <host>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = gnocchi
+password = <pass_gnoch>
+interface = internalURL
+region_name = RegionOne
+service_token_roles_required = true
+
+[indexer]
+url = mysql+pymysql://gnocchi:<pass>@<host>:3306/gnocchi
+
+
+[storage]
+file_basepath = /var/lib/gnocchi
+driver = file
+```
+- create new file /etc/httpd/conf.d/10-gnocchi_wsgi.conf
+```
+vim /etc/httpd/conf.d/10-gnocchi_wsgi.conf
+```
+- change /etc/httpd/conf.d/10-gnocchi_wsgi.conf
+```
+Listen 8041
+<VirtualHost *:8041>
+  <Directory /usr/bin>
+    AllowOverride None
+    Require all granted
+  </Directory>
+
+  CustomLog /var/log/httpd/gnocchi_wsgi_access.log combined
+  ErrorLog /var/log/httpd/gnocchi_wsgi_error.log
+  SetEnvIf X-Forwarded-Proto https HTTPS=1
+  WSGIApplicationGroup %{GLOBAL}
+  WSGIDaemonProcess gnocchi display-name=gnocchi_wsgi user=gnocchi group=gnocchi processes=6 threads=6
+  WSGIProcessGroup gnocchi
+  WSGIScriptAlias / /usr/bin/gnocchi-api
+</VirtualHost>
+```
+- add privileges and change group
+``` 
+chmod 640 /etc/gnocchi/gnocchi.conf
+chgrp gnocchi /etc/gnocchi/gnocchi.conf
+```
+upgrade gnocchi, (write db gnocchi and preference)
+```
+ su -s /bin/bash gnocchi -c "gnocchi-upgrade"
+```
+- enable and start the Gnocchi services
+```
+systemctl enable openstack-gnocchi-api.service openstack-gnocchi-metricd.service
+systemctl start openstack-gnocchi-api.service openstack-gnocchi-metricd.service
+```
+- # CHECK
+```
+export OS_AUTH_TYPE=password
+gnocchi resource list
+```
+ OK if no error is shown!!!
+---
+
+ - Install and configure components
+
+```
+dnf install openstack-ceilometer-notification openstack-ceilometer-central
+```
+- change yaml /etc/ceilometer/pipeline.yaml
+```
+publishers:
+    - gnocchi://?filter_project=service&archive_policy=low   # add
+
+```
+- edit /etc/ceilometer/ceilometer.conf
+
+
+openstack service create --name gnocchi --description "Metric Service" metric
 ![Openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-10%20140451.png)
 
 masakari-api
