@@ -2296,7 +2296,84 @@ publishers:
 
 ```
 - edit /etc/ceilometer/ceilometer.conf
+```
+[DEFAULT]
+transport_url = rabbit://openstack:<pass>@<host>
 
+[service_credentials]
+
+auth_url = http://<host>:5000/v3
+memcached_servers = <host>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = ceilometer
+password = <pass>
+region_name = RegionOne
+
+
+[keystone_authtoken]
+www_authenticate_uri = http://<host>:5000/v3
+auth_url = http://<host>:5000/v3
+memcached_servers = <host>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = ceilometer
+password = 1qaz2wsx
+service_token_roles_required = true
+
+```
+Add rulles and  ceilometer-upgrade
+```
+chmod 640 /etc/ceilometer/ceilometer.conf
+su -s /bin/bash ceilometer -c "ceilometer-upgrade --skip-metering-database"
+```
+- configure nova use Telemetry
+```
+[DEFAULT]
+instance_usage_audit = True
+instance_usage_audit_period = hour
+notify_on_state_change = vm_and_task_state
+
+[oslo_messaging_notifications]
+driver = messagingv2
+```
+edit privileges /etc/sudoers
+```
+ceilometer ALL = (root) NOPASSWD: /usr/bin/ceilometer-rootwrap /etc/ceilometer/rootwrap.conf *
+```
+- Edit the /etc/ceilometer/polling.yaml
+```
+- name: ipmi
+  interval: 300
+  meters:
+    - hardware.ipmi.temperature     #add string
+```
+Start service and restart Nova compute
+```
+ systemctl enable openstack-ceilometer-compute.service
+systemctl start openstack-ceilometer-compute.service
+systemctl enable openstack-ceilometer-ipmi.service (optional)
+systemctl start openstack-ceilometer-ipmi.service (optional)
+systemctl restart openstack-nova-compute.service
+```
+- Change Cinder driver /etc/cinder/cinder.conf
+```
+[oslo_messaging_notifications]
+driver = messagingv2
+```
+restart service 
+```
+systemctl restart openstack-cinder-api.service openstack-cinder-scheduler.service
+systemctl restart openstack-cinder-volume.service
+```
+NEXT 
+Edit the /etc/glance/glance-api.con
+Edit the /etc/heat/heat.conf 
+Edit the /etc/neutron/neutron.conf
 
 openstack service create --name gnocchi --description "Metric Service" metric
 ![Openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-10%20140451.png)
