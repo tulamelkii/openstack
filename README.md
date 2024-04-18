@@ -2275,8 +2275,13 @@ upgrade gnocchi, (write db gnocchi and preference)
 ```
 - enable and start the Gnocchi services
 ```
-systemctl enable openstack-gnocchi-api.service openstack-gnocchi-metricd.service
-systemctl start openstack-gnocchi-api.service openstack-gnocchi-metricd.service
+systemctl  openstack-gnocchi-metricd.service
+systemctl start  openstack-gnocchi-metricd.service
+
+```
+ ## Service openstack-gnocchi-api.service disanble if you use wsgi!!!!!
+ 
+```
 ```
 - # CHECK
 ```
@@ -2367,21 +2372,170 @@ systemctl restart openstack-nova-compute.service
 [oslo_messaging_notifications]
 driver = messagingv2
 ```
-restart service 
+- restart service 
 ```
 systemctl restart openstack-cinder-api.service openstack-cinder-scheduler.service
 systemctl restart openstack-cinder-volume.service
 ```
-NEXT 
-Edit the /etc/glance/glance-api.con
-Edit the /etc/heat/heat.conf 
-Edit the /etc/neutron/neutron.conf
+- Edit the /etc/glance/glance-api.conf
+```
+[DEFAULT]
+transport_url = rabbit://openstack:<password>@<host>
+[oslo_messaging_notifications]
+driver = messagingv2
+```
+- restart service glance
+```
+systemctl restart openstack-glance-api.service
+```
+- Edit the /etc/heat/heat.conf
+```
+[oslo_messaging_notifications]
+driver = messagingv2
+```
+- restart services heat 
+```
+systemctl restart openstack-heat-api.service openstack-heat-api-cfn.service openstack-heat-engine.service
+```
+- Edit the /etc/neutron/neutron.conf
+```
+[oslo_messaging_notifications]
+driver = messagingv2
+```
+- restart service
+```
+systemctl restart neutron-server.service
+```
+## Verify operation
+
+```
+gnocchi resource list  --type image
+
+[root@Only ~]# gnocchi resource list
+
+
 openstack service create --name gnocchi --description "Metric Service" metric
 
+[root@Only ~]# gnocchi resource list
++--------------------------------------+----------------------+----------------------------------+----------------------------------+--------------------------------------+----------------------------------+----------+----------------------------------+--------------+----------------
+| id                                   | type                 | project_id                       | user_id                          | original_resource_id                 | started_at                       | ended_at | revision_start                   | revision_end | creator        |                                      |                      |                                  |                                  |                                      |                                  |          |                                  |              |   |
++--------------------------------------+----------------------+----------------------------------+----------------------------------+--------------------------------------+----------------------------------+----------+----------------------------------+--------------+----------------
+| 6246de73-cef5-5721-884f-139c8f151770 | volume_provider_pool | None                             | None                             | Only@lvm#LVM                         | 2024-04-17T08:58:54.896733+00:00 | None     | 2024-04-17T08:58:54.896741+00:00 | None         | 9 |
+| aa94bf6e-3afb-5711-8f8a-0d41dae51236 | volume_provider      | None                             | None                             | Only@lvm                             | 2024-04-17T08:58:54.949741+00:00 | None     | 2024-04-17T08:58:54.949748+00:00 | None         |   |
+| feaa994c-7b3f-4990-921d-4a45978da07f | instance             | ef0fc1864fe74a57bf618baa1331dddf | 8ba0260e8afc4f73856b2da075e81213 | feaa994c-7b3f-4990-921d-4a45978da07f | 2024-04-17T12:00:59.949555+00:00 | None     | 2024-04-17T12:00:59.949564+00:00 | None         |   |
+| 774b132a-42a0-4949-936d-166d02e9a087 | instance             | ef0fc1864fe74a57bf618baa1331dddf | 8ba0260e8afc4f73856b2da075e81213 | 774b132a-42a0-4949-936d-166d02e9a087 | 2024-04-17T12:00:59.961904+00:00 | None     | 2024-04-17T12:00:59.961911+00:00 | None         |   |
++--------------------------------------+----------------------+----------------------------------+----------------------------------+--------------------------------------+----------------------------------+----------+----------------------------------+--------------+----------------
+```
+ 
+                                                                                                                                      --- AODH--
+
+- create db aodh;
+
+```
+mysql -u root -p
+CREATE DATABASE aodh;
+```
+add privilege
+```
+GRANT ALL PRIVILEGES ON aodh.* TO 'aodh'@'localhost' IDENTIFIED BY '<pass>';
+GRANT ALL PRIVILEGES ON aodh.* TO 'aodh'@'%' IDENTIFIED BY '<pass>';
+GRANT ALL PRIVILEGES ON aodh.* TO 'aodh'@'<host>' IDENTIFIED BY '<pass>';
+```
+- create user
+```
+openstack user create --domain default --password-prompt aodh
+```
+- create service 
+```
+openstack service create --name aodh --description "Telemetry" alarming
+```
+create endpoint
+```
+openstack endpoint create --region RegionOne alarming public http://Only:8042
+openstack endpoint create --region RegionOne alarming internal http://Only:8042
+openstack endpoint create --region RegionOne alarming admin http://Only:8042
+```
+- Install the packages:
+```
+yum install openstack-aodh-api openstack-aodh-evaluator openstack-aodh-notifier openstack-aodh-listener openstack-aodh-expirer python-aodhclient
+
+```
+- Edit the /etc/aodh/aodh.conf
+```
+[database]
+connection = mysql+pymysql://aodh:<pass>@<Only>/aodh
+
+[DEFAULT]
+transport_url = rabbit://openstack:<only> @<only>
+[api]
+auth_strategy = keystone
+
+[keystone_authtoken]
+www_authenticate_uri = http://<host>:5000/v3
+auth_url = http://<host>:5000/v3
+memcached_servers = <host>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = aodh
+password = <pass>
+service_token_roles_required = true
 
 
+[service_credentials]
 
+auth_url = http://Only:5000/v3
+memcached_servers = Only:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = ceilometer
+password = aodh
+region_name = RegionOne
+interface = internalURL
 
+```
+create wsgi
+```
+vim /etc/httpd/conf.d/20-aodh_wsgi.conf
+
+Listen 8042
+<VirtualHost *:8042>
+    DocumentRoot "/var/www/cgi-bin/aodh"
+    <Directory "/var/www/cgi-bin/aodh">
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    CustomLog "/var/log/httpd/aodh_wsgi_access.log" combined
+    ErrorLog "/var/log/httpd/aodh_wsgi_error.log"
+    SetEnvIf X-Forwarded-Proto https HTTPS=1
+    WSGIApplicationGroup %{GLOBAL}
+    WSGIDaemonProcess aodh display-name=aodh_wsgi user=aodh group=aodh processes=6 threads=3
+    WSGIProcessGroup aodh
+    WSGIScriptAlias / "/var/www/cgi-bin/aodh/app"
+</VirtualHost>
+```
+ add privileges
+ ```
+ chmod 640 /etc/aodh/aodh.conf
+ chgrp aodh /etc/aodh/aodh.conf
+ mkdir /var/www/cgi-bin/aodh
+cp /usr/lib/python3.9/site-packages/aodh/api/app.wsgi /var/www/cgi-bin/aodh/app
+chown -R aodh. /var/www/cgi-bin/aodh
+```
+sync db 
+```
+su -s /bin/bash aodh -c "aodh-dbsync"
+```
+- restart service aodh
+```
+ systemctl start openstack-aodh-evaluator openstack-aodh-notifier openstack-aodh-listener
+ systemctl enable openstack-aodh-evaluator openstack-aodh-notifier openstack-aodh-listener
+ ```
+Check service
 ![Openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-10%20140451.png)
 
 masakari-api
