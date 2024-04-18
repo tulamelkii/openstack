@@ -2165,6 +2165,8 @@ openstack secret store --secret-type passphrase --name "test passphrase" --paylo
                                              
 --Ceilometer--
 
+![Openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-18%20114140.png)
+
 - Create the ceilometer user
 ```
 openstack user create --domain default --password-prompt ceilometer
@@ -2374,8 +2376,12 @@ NEXT
 Edit the /etc/glance/glance-api.con
 Edit the /etc/heat/heat.conf 
 Edit the /etc/neutron/neutron.conf
-
 openstack service create --name gnocchi --description "Metric Service" metric
+
+
+
+
+
 ![Openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-10%20140451.png)
 
 masakari-api
