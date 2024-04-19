@@ -2540,6 +2540,8 @@ su -s /bin/bash aodh -c "aodh-dbsync"
                                                                                                                 --Nova--
                                                                                                                 
                                                                       
+![openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-19%20092524.png)
+
 Nova - For managing amphora lifecycle and spinning up compute resources on demand.
 
 Neutron - For network connectivity between amphorae, tenant environments, and external networks.
@@ -2554,6 +2556,12 @@ Oslo - For communication between Octavia controller components, making Octavia w
 
 Taskflow - Is technically part of Oslo; however, Octavia makes extensive use of this job flow system when orchestrating back-end service configuration and management.
 
+Step by step
+- Create ‘octavia’ user.
+-  Load Balancer Network Configuration (create network, subnetworks and add rules for security network 5555,22,9443)
+-  reate Amphora Image
+-  reate controller
+ 
 
 
 Check service
