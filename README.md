@@ -2535,6 +2535,27 @@ su -s /bin/bash aodh -c "aodh-dbsync"
  systemctl start openstack-aodh-evaluator openstack-aodh-notifier openstack-aodh-listener
  systemctl enable openstack-aodh-evaluator openstack-aodh-notifier openstack-aodh-listener
  ```
+
+
+                                                                                                                --Nova--
+                                                                                                                
+                                                                      
+Nova - For managing amphora lifecycle and spinning up compute resources on demand.
+
+Neutron - For network connectivity between amphorae, tenant environments, and external networks.
+
+Barbican - For managing TLS certificates and credentials, when TLS session termination is configured on the amphorae.
+
+Keystone - For authentication against the Octavia API, and for Octavia to authenticate with other OpenStack projects.
+
+Glance - For storing the amphora virtual machine image.
+
+Oslo - For communication between Octavia controller components, making Octavia work within the standard OpenStack framework and review system, and project code structure.
+
+Taskflow - Is technically part of Oslo; however, Octavia makes extensive use of this job flow system when orchestrating back-end service configuration and management.
+
+
+
 Check service
 ![Openstack](https://github.com/tulamelkii/openstack/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%202024-04-10%20140451.png)
 
