@@ -2561,7 +2561,8 @@ Step by step
 -  Load Balancer Network Configuration (create network, subnetworks and add rules for security network 5555,22,9443)
 -  reate Amphora Image
 -  reate controller
- 
+ ![Openstack](https://github.com/tulamelkii/openstack/assets/130311206/55c40e67-8dc5-445f-9172-38780ede90fc)
+
 
 
 Check service
