@@ -2575,6 +2575,8 @@ masakari-engine
 Processes the notifications received from masakari-api by executing the recovery workflow in asynchronous way.
 
 
+su -s /bin/sh  -c "/usr/local/bin/zun-db-manage upgrade" zun
+
 good luck
 --------------------------------------------
 
