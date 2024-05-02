@@ -2577,6 +2577,17 @@ Processes the notifications received from masakari-api by executing the recovery
 
 su -s /bin/sh  -c "/usr/local/bin/zun-db-manage upgrade" zun
 
+
+## plugin kata
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
+         runtime_type = "io.containerd.kata.v2"
+	 privileged_without_host_devices = true
+	 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata.options]
+	   ConfigPath = "/etc/kata-containers/config.toml"
+
+
+
+
 good luck
 --------------------------------------------
 
