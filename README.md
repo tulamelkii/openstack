@@ -2576,6 +2576,7 @@ Processes the notifications received from masakari-api by executing the recovery
 
 
 su -s /bin/sh  -c "/usr/local/bin/zun-db-manage upgrade" zun
+pciutils!!! zun
 
 
 ## plugin kata
