@@ -2851,10 +2851,16 @@ download image qcow2
 ```
 "https://swift.services.a.regiocloud.tech/swift/v1/AUTH_b182637428444b9aa302bb8d5a5a418c/openstack-octavia-amphora-image/octavia-amphora-haproxy-2023.1.qcow2"
 ```
-conver qcow 2 to img
+conver qcow2 to img
 ```
 qemu-img convert octavia-amphora-haproxy-2024.1.qcow2 octavia-amphora-haproxy-2024.1.img
 ```
+push image 
+```
+openstack image create --disk-format raw --file octavia-amphora.img --project service --min-disk 5 --min-ram 1024 --private --tag amphora  amphora
+```
+error if we create image flavor and security group to diferent project. 
+Watch owner id, flawor id, user id (project Service)
 
 
 
