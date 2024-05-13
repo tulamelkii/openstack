@@ -2633,7 +2633,7 @@ touch /etc/sudoers.d/admin
 chmod 440 /etc/sudoers.d/admin:
 nano  /etc/sudoers.d/admin >>
 admin ALL=(ALL) NOPASSWD:ALL
-
+```
 Create sec group
 ```
 openstack security group create lb-mgmt-sec-group --project service # (to project service)
@@ -2867,6 +2867,12 @@ openstack image create --disk-format raw --file octavia-amphora.img --project se
 ```
 error if we create image flavor and security group to diferent project. 
 Watch owner id, flawor id, user id (project Service)
+```
+Octavia-UI
+
+pip3 install octavia-dashboard
+cp /usr/local/lib/python3.9/site-packages/octavia_dashboard/enabled/*py /usr/share/openstack-dashboard/openstack_dashboard/local/enabled
+# Zun and octavia install folder /usr/local/lib/python3.9/site-packages
 
 
 
