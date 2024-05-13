@@ -2581,13 +2581,12 @@ Check service
 create database 
 ```
 mysql
-CREATE DATABASE octavia;
-create privileges to base
-GRANT ALL PRIVILEGES ON octavia.* TO 'octavia'@'localhost' \
-IDENTIFIED BY 'OCTAVIA_DBPASS';
-GRANT ALL PRIVILEGES ON octavia.* TO 'octavia'@'%' \
-IDENTIFIED BY 'OCTAVIA_DBPASS';
-flush privilees;
+ CREATE DATABASE octavia;
+ GRANT ALL PRIVILEGES ON octavia.* TO 'octavia'@'localhost' IDENTIFIED BY '<password>';
+ GRANT ALL PRIVILEGES ON octavia.* TO 'octavia'@'Only' IDENTIFIED BY '<password>';
+ GRANT ALL PRIVILEGES ON octavia.* TO 'octavia'@'%' IDENTIFIED BY '<password>';
+ FLUSH PRIVILEGES;
+
 exit;
 ```
 
@@ -2628,6 +2627,13 @@ Install programm
 pip install diskimage-builder
 dnf install octavia-api octavia-health-manager octavia-housekeeping octavia-worker python3-octavia python3-octaviaclient python3-octavia-dashboard octavia-driver-agent
 ```
+add rulles
+```
+touch /etc/sudoers.d/admin
+chmod 440 /etc/sudoers.d/admin:
+nano  /etc/sudoers.d/admin >>
+admin ALL=(ALL) NOPASSWD:ALL
+
 Create sec group
 ```
 openstack security group create lb-mgmt-sec-group --project service # (to project service)
