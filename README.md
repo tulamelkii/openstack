@@ -2578,6 +2578,143 @@ Check service
                                                                   --Octavia
 ![image](https://github.com/tulamelkii/openstack/assets/130311206/b04b3606-dba5-47ab-8c8c-5e5aa1d63e10)
 
+create database 
+```
+mysql
+CREATE DATABASE octavia;
+create privileges to base
+GRANT ALL PRIVILEGES ON octavia.* TO 'octavia'@'localhost' \
+IDENTIFIED BY 'OCTAVIA_DBPASS';
+GRANT ALL PRIVILEGES ON octavia.* TO 'octavia'@'%' \
+IDENTIFIED BY 'OCTAVIA_DBPASS';
+flush privilees;
+exit;
+```
+
+
+create user octavia
+```
+openstack user create --domain default --password-prompt octavia
+
+ +---------------------+----------------------------------+
+  | Field               | Value                            |
+  +---------------------+----------------------------------+
+  | domain_id           | default                          |
+  | enabled             | True                             |
+  | id                  | b18ee38e06034b748141beda8fc8bfad |
+  | name                | octavia                          |
+  | options             | {}                               |
+  | password_expires_at | None                             |
+  +---------------------+----------------------------------+
+
+```
+Add the admin role to the octavia user
+```
+openstack role add --project service --user octavia admin
+```
+create service
+```
+openstack service create --name octavia --description "OpenStack Octavia" load-balancer
+```
+
+Create the Load-balancer service API endpoints
+```
+openstack endpoint create --region RegionOne load-balancer public http://<controller>:9876
+openstack endpoint create --region RegionOne load-balancer internal http://controller:9876
+openstack endpoint create --region RegionOne load-balancer admin http://controller:9876
+```
+Install programm
+```
+pip install diskimage-builder
+dnf install octavia-api octavia-health-manager octavia-housekeeping octavia-worker python3-octavia python3-octaviaclient python3-octavia-dashboard octavia-driver-agent
+```
+Create sec group
+```
+openstack security group create lb-mgmt-sec-group --project service # (to project service)
+openstack security group rule create --protocol icmp --ingress lb-mgmt-sec-group
+openstack security group rule create --protocol tcp --dst-port 22:22 lb-mgmt-sec-group
+openstack security group rule create --protocol tcp --dst-port 80:80 lb-mgmt-sec-group
+openstack security group rule create --protocol tcp --dst-port 443:443 lb-mgmt-sec-group
+openstack security group rule create --protocol tcp --dst-port 9443:9443 lb-mgmt-sec-group
+openstack security group create lb-health-mgr-sec-grp
+openstack security group rule create --protocol udp --dst-port 5555 lb-health-mgr-sec-grp
+```
+Create keygen
+```
+ssh-keygen
+openstack keypair create --public-key --user octavia /home/admin/.ssh/amphora.pub amphora_new
+```
+create dhcp file 
+```
+cd $HOME
+sudo mkdir -m755 -p /etc/dhcp/octavia
+vim/etc/dhcp/octavia
+...
+request subnet-mask,broadcast-address,interface-mtu;
+do-forward-updates false;
+...
+```
+
+
+export env
+
+```
+OCTAVIA_MGMT_SUBNET=172.16.0.0/12
+OCTAVIA_MGMT_SUBNET_START=172.16.0.100
+OCTAVIA_MGMT_SUBNET_END=172.16.31.254
+OCTAVIA_MGMT_PORT_IP=172.16.0.2
+```
+Create network for octavia
+```
+openstack network create lb-mgmt-net
+```
+Subnet create
+```
+openstack subnet create --subnet-range $OCTAVIA_MGMT_SUBNET --allocation-pool start=$OCTAVIA_MGMT_SUBNET_START,end=$OCTAVIA_MGMT_SUBNET_END  --network lb-mgmt-net lb-mgmt-subnet
+```
+Add env subnet
+```
+SUBNET_ID=$(openstack subnet show lb-mgmt-subnet -f value -c id)
+```
+Add env port fixed for managment 
+```
+PORT_FIXED_IP="--fixed-ip subnet=$SUBNET_ID,ip-address=$OCTAVIA_MGMT_PORT_IP"
+```
+Add env and create port   
+```
+MGMT_PORT_ID=$(openstack port create --security-group lb-mgmt-sec-group --device-owner Octavia:health-mgr --host=$(hostname) -c id -f value --network lb-mgmt-net PORT_FIXED_IP octavia-health-manager-listen-port)
+MGMT_PORT_MAC=$(openstack port show -c mac_address -f value $MGMT_PORT_ID)
+
+```
+add 2 virtual interface
+```
+sudo ip link add o-hm0 type veth peer name o-bhm0
+NETID=$(openstack network show lb-mgmt-net -c id -f value)
+BRNAME=brq$(echo $NETID|cut -c 1-11)
+sudo brctl addif $BRNAME o-bhm0
+sudo ip link set o-bhm0 up
+sudo ip link set dev o-hm0 address $MGMT_PORT_MAC
+sudo iptables -I INPUT -i o-hm0 -p udp --dport 5555 -j ACCEPT
+sudo dhclient -v o-hm0 -cf /etc/dhcp/octavia 
+
+```
+Check create brige and virtual interface
+
+![image](https://github.com/tulamelkii/openstack/assets/130311206/638209d5-3436-4a78-a32d-5eeec44ba667)
+
+!!!save!!!! name brige and mac adress brige 
+```
+ 
+```
+
+
+create image ony raw 
+
+
+
+  
+
+
 
 
 
