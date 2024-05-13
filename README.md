@@ -2703,9 +2703,159 @@ Check create brige and virtual interface
 ![image](https://github.com/tulamelkii/openstack/assets/130311206/638209d5-3436-4a78-a32d-5eeec44ba667)
 
 !!!save!!!! name brige and mac adress brige 
+- create service
 ```
- 
+vim /etc/systemd/system/octavia-interface.service
+
+[Unit]
+Description=Octavia Interface Creator
+Requires=neutron-linuxbridge-agent.service
+After=neutron-linuxbridge-agent.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/opt/octavia-interface.sh start
+ExecStop=/opt/octavia-interface.sh stop
+User = root
+
+[Install]
+WantedBy=multi-user.target
 ```
+create script for sh 
+
+```
+vim /opt/octavia-interface.sh 
+...
+
+#!/bin/bash
+
+set -ex
+
+MAC=fa:16:3e:a8:15:38
+BRNAME=brqdf55c0a8-a6
+
+if [ "$1" == "start" ]; then
+  ip link add o-hm0 type veth peer name o-bhm0
+  brctl addif $BRNAME o-bhm0
+  ip link set o-bhm0 up
+  ip link set dev o-hm0 address $MAC
+  ip addr add 172.16.0.2/12 dev o-hm0
+  ip link set o-hm0 mtu 1500
+  ip link set o-hm0 up
+  iptables -I INPUT -i o-hm0 -p udp --dport 5555 -j ACCEPT
+#  dhclient -v o-hm0 -cf /etc/dhcp/octavia/dhclient.conf
+elif [ "$1" == "stop" ]; then
+  ip link del o-hm0
+else
+  brctl show $BRNAME
+...
+
+
+```
+Create sertificate  "https://docs.openstack.org/octavia/latest/admin/guides/certificates.html" for octavia
+
+change /etc/octavia/octavia.conf
+```
+[DEFAULT]
+transport_url = rabbit://openstack:<password>@<controller>:5672/
+use_syslog = false
+use_json = false
+log_dir=/var/log/octavia
+
+[database]
+connection = mysql+pymysql://octavia:<password>@<controller>:3306/octavia
+
+[oslo_messaging]
+topic = octavia_prov
+
+[keystone_authtoken]
+www_authenticate_uri = http://<controller>:5000/v3
+auth_url = http://<controller>:5000/v3
+memcached_servers = <controller>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = octavia
+password = <passwor>
+region_name = RegionOne
+service_token_roles_required = True
+
+
+[api_settings]
+bind_host = 0.0.0.0
+bind_port = 9876
+auth_strategy = keystone
+default_provider_driver = amphora
+api_base_uri = http://<controller>:9876/
+
+[keystone_authtoken]
+www_authenticate_uri = http://<controller>:5000/v3
+auth_url = http://<controller>:5000/v3
+memcached_servers = <controller>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = octavia
+password = <password>
+region_name = RegionOne
+service_token_roles_required = True
+
+[service_auth]
+auth_url = http://<controller>:5000/v3
+memcached_servers = <controller>:11211
+auth_type = password
+project_domain_name = default
+user_domain_name = default
+project_name = service
+username = octavia
+password = <passwprd>
+region_name = RegionOne
+
+[controller_worker]
+amp_image_owner_id = 8ff6ed6387214d49a89c257af089a339 # progect Service
+amp_image_tag = amphora
+amp_ssh_key_name = amphora_new
+amp_secgroup_list = 5a43ec0b-2ef2-4c88-970c-1f5dcf27a9ea
+amp_boot_network_list = df55c0a8-a6e4-4790-9b4b-b34b06d93bda
+amp_flavor_id = 100
+network_driver = allowed_address_pairs_driver
+compute_driver = compute_nova_driver
+#amphora_driver = amphora_haproxy_rest_driver
+client_ca = /etc/octavia/certs/client_ca.cert.pem
+
+[certificates]
+cert_generator = local_cert_generator
+ca_certificate = /etc/octavia/certs/server_ca.cert.pem
+ca_private_key = /etc/octavia/certs/server_ca.key.pem
+ca_private_key_passphrase = "phrase"
+#server_certs_key_passphrase = 
+
+[haproxy_amphora]
+client_cert = /etc/octavia/certs/client.cert-and-key.pem
+server_ca = /etc/octavia/certs/server_ca.cert.pem
+
+```
+sync db
+```
+octavia-db-manage --config-file /etc/octavia/octavia.conf upgrade head
+```
+restart service
+```
+systemctl restart octavia-api octavia-health-manager octavia-housekeeping octavia-worker
+```
+create image amphora
+download image qcow2
+```
+"https://swift.services.a.regiocloud.tech/swift/v1/AUTH_b182637428444b9aa302bb8d5a5a418c/openstack-octavia-amphora-image/octavia-amphora-haproxy-2023.1.qcow2"
+```
+conver qcow 2 to img
+```
+qemu-img convert octavia-amphora-haproxy-2024.1.qcow2 octavia-amphora-haproxy-2024.1.img
+```
+
 
 
 create image ony raw 
