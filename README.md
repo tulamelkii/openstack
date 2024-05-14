@@ -3325,3 +3325,14 @@ User = zun                                                                     #
 WantedBy = multi-user.target
 ...
 
+hw_disk_bus_model=virtio-scsi
+hw_scsi_model=virtio-scsi
+hw_disk_bus=scsi
+
+
+hw:cpu_sockets=1
+hw:cpu_cores=4
+hw:cpu_threads=8
+
+hw:mem_pages_size=2G
+hw:cpu_policy=shared
