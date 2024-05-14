@@ -2894,17 +2894,229 @@ start docker
 ```
 sudo systemctl start docker
 ```
+ ## Install kuryr-libnetwork
+
+
+ - create user openstck 
+ ```
+ su - admin 
+ openstack user create --domain default --password-prompt kuryr 
+```
+- arr role
+```
+openstack role add --project service --user kuryr admin
+```
+- create user os 
+```
+useradd --home-dir "/var/lib/kuryr" --create-home --system --shell /bin/false -g kuryr kuryr
+mkdir -p /etc/kuryr 
+chown kuryr:kuryr /etc/kuryr
+```
+clone git kuryr driver
+```
+cd /var/lib/kuryr
+git clone -b master https://opendev.org/openstack/kuryr-libnetwork.git
+```
+install kuryr-libnetwork 
+```
+chown -R kuryr:kuryr kuryr-libnetwork 
+cd kuryr-libnetwork 
+pip3 install -r requirements.txt
+```
+
+create config kuryr.conf
+```
+su -s /bin/sh -c "./tools/generate_config_file_samples.sh" kuryr 
+su -s /bin/sh -c "cp etc/kuryr.conf.sample /etc/kuryr/kuryr.conf" kuryr 
+```
+change config 
+```
+vim  /etc/kuryr/kuryr.conf
+...
+[DEFAULT] 
+... 
+bindir = /usr/local/libexec/kuryr 
  
+[neutron]
 
+www_authenticate_uri = http://<controller>:5000 
+auth_url = http://<heliuszun>:5000 
+username = kuryr 
+user_domain_name = default 
+password = <password>
+project_name = service 
+project_domain_name = default 
+auth_type = password 
 
+```
+- create service
+```
+vim /etc/systemd/system/kuryr-libnetwork.service 
+...
+[Unit] 
+Description = Kuryr-libnetwork - Docker network plugin for Neutron 
+ 
+[Service] 
+ExecStart = /usr/local/bin/kuryr-server --config-file /etc/kuryr/kuryr.conf 
+CapabilityBoundingSet = CAP_NET_ADMIN 
+AmbientCapabilities = CAP_NET_ADMIN 
+ 
+[Install] 
+WantedBy = multi-user.target
+```
+start and enable service 
+```
+systemctl enable kuryr-libnetwork 
+systemctl start kuryr-libnetwork 
+systemctl restart docker 
+```
+- check create network kuryr or not
+```
+ docker network create --driver kuryr --ipam-driver kuryr --subnet 10.10.150.0/24 --gateway=10.10.150.1 test_net_zun
+```
+docker network ls 
+...
+![image](https://github.com/tulamelkii/openstack/assets/130311206/aa813d3c-cf43-4b97-8668-989e4a31ad1d)
 
+## Create Zun 
+create database 
+```
+mysql
+create database zun;
+GRANT ALL PRIVILEGES ON zun.* TO 'zun'@'localhost' IDENTIFIED BY '<password>';
+GRANT ALL PRIVILEGES ON zun.* TO 'zun'@'<controller>' IDENTIFIED BY '<password>';
+GRANT ALL PRIVILEGES ON zun.* TO 'zun'@'%' IDENTIFIED BY '<password>'; 
+FLUSH PRIVILEGES;
+exit;
+```
+create user and role
+```
+su - admin
+openstack user create --domain default --password-prompt zun
+openstack role add --project service --user zun admin
+```
+- create service 
+```
+openstack service create --name zun --description "Container Service" container
+```
+- create endpoint
+```
+openstack endpoint create --region RegionOne container public http://<controller>:9517/v1
+openstack endpoint create --region RegionOne container internal http://<controller>:9517/v1
+openstack endpoint create --region RegionOne container admin http://<controller>:9517/v1
+```
+- create group user 
+```
+useradd --home-dir "/var/lib/zun" --create-home --system --shell /bin/false -g zun zun  
+```
+- create dir 
+```
+mkdir -p /etc/zun
+chown zun:zun /etc/zun
+```
+- install pip3 and git
+```
+yum -y install python3-pip git 
+```
+- clone directory git zun 
+```
+cd /var/lib/zun 
+git clone https://opendev.org/openstack/zun.git 
+chown -R zun:zun zun
+```
+- add config in /var/lib/zun/zun 
+```
+git config --global --add safe.directory /var/lib/zun/zun 
+```
+- install zun with pip 
+```
+cd zun 
+pip3 install -r requirements.txt 
+python3 setup.py install 
+```
+- create config zun
+```
+su -s /bin/sh -c "cp etc/zun/zun.conf.sample /etc/zun/zun.conf" zun
+```
+copy api-paste.ini
+```
+su -s /bin/sh -c "cp etc/zun/zun.conf.sample /etc/zun/zun.conf" zun
+```
+edit /etc/zun/zun.conf
+```
+vim /etc/zun/zun.conf
+...
+[DEFAULT] 
+... 
+transport_url = rabbit://openstack:<password>@<controller> 
+log_dir=/var/log/zun 
+log_date_format=%Y-%m-%d %H:%M:%S 
+use_syslog=false 
+ 
+[api] 
+... 
+host_ip = <ip internal>
+port = 9517 
+workers = 2 
+ 
+[database] 
 
-create image ony raw 
+connection = mysql+pymysql://zun:<password>@<controller>/zun 
+ 
+[keystone_auth] 
+memcached_servers = <controller>:11211 
+www_authenticate_uri = http://<controller>:5000 
+project_domain_name = default 
+project_name = service 
+user_domain_name = default 
+password = <password>
+username = zun 
+auth_url = http://<controller>:5000 
+auth_type = password 
+auth_version = v3 
+auth_protocol = http 
+service_token_roles_required = True 
+endpoint_type = internalURL 
+ 
+[keystone_authtoken] 
 
-
-
-  
-
+memcached_servers = <controller>:11211 
+www_authenticate_uri = http://<controller>:5000 
+project_domain_name = default 
+project_name = service 
+user_domain_name = default 
+password = <password>
+username = zun 
+auth_url = http://<controller>:5000 
+auth_type = password 
+auth_version = v3 
+auth_protocol = http 
+service_token_roles_required = True 
+endpoint_type = internalURL 
+ 
+[oslo_concurrency] 
+lock_path = /var/lib/zun/tmp 
+ 
+[oslo_messaging_notifications] 
+driver = messaging 
+ 
+[websocket_proxy] 
+wsproxy_host = <ecternal ip> 
+wsproxy_port = 6784 
+base_url = ws://<external_ip>:6784/  # for interface container
+ 
+```
+add rules 
+```
+mkdir /var/log/zun 
+chown zun. -R /var/log/zun  
+chmod 755 /var/log/zun
+```
+create file polycy
+```
+mkdir /etc/zun/policy.d 
+touch /etc/zun/policy.d/policy.yam
+```
 
 
 
