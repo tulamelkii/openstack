@@ -3112,48 +3112,216 @@ mkdir /var/log/zun
 chown zun. -R /var/log/zun  
 chmod 755 /var/log/zun
 ```
-create file polycy
+- create file polycy
 ```
 mkdir /etc/zun/policy.d 
 touch /etc/zun/policy.d/policy.yam
 ```
+- sync db 
+```
+su -s /bin/sh -c "zun-db-manage upgrade" zun
+```
+- create zun-api.service 
+```
+vim /etc/systemd/system/zun-api.service 
+...
+[Unit] 
+Description = OpenStack Container Service API 
+ 
+[Service] 
+ExecStart = /usr/local/bin/zun-api 
+User = zun 
+ 
+[Install] 
+WantedBy = multi-user.target
+```
+- create service zun-wsproxy.service 
+```
+[Unit] 
+Description = OpenStack Container Service Websocket Proxy 
+ 
+[Service] 
+ExecStart = /usr/local/bin/zun-wsproxy 
+User = zun 
+ 
+[Install] 
+WantedBy = multi-user.target
+```
+- enable service
 
+```
+systemctl enable zun-api 
+systemctl enable zun-wsproxy 
+```
+- start service
+```
+systemctl start zun-api 
+systemctl start zun-wsproxy 
+```
+- check status
+```
+systemctl status zun-api zun-wsproxy 
+systemctl status zun-wsproxy 
+```
 
+create dashbord
+```
+git clone https://github.com/openstack/zun-ui 
+cd zun-ui/ 
+git checkout stable/stein 
+pip3 install . 
+cp zun_ui/enabled/* /usr/share/openstack-dashboard/openstack_dashboard/enabled/ 
+cd /usr/share/openstack-dashboard 
+python3 manage.py collectstatic 
+python3 manage.py compress 
+systemctl restart httpd 
+```
+--------------------------------
+## Copmute node 
+ 
+- create user
+```    
+ groupadd --system zun 
+ useradd --home-dir "/var/lib/zun" --create-home --system --shell /bin/false -g zun zun 
+```
+- create directory
+```
+mkdir -p /etc/zun 
+chown zun:zun /etc/zun 
+```
+- create directory
+```  
+ mkdir -p /etc/cni/net.d 
+ chown zun:zun /etc/cni/net.d 
+```
+- install program
+```
+apt -y install python3-pip git numactl pciutils 
+``` 
+Install zun
+```
+cd /var/lib/zun 
+git clone https://opendev.org/openstack/zun.git 
+chown -R zun:zun zun 
+git config --global --add safe.directory /var/lib/zun/zun 
+cd zun 
+pip3 install -r requirements.txt 
+python3 setup.py install 
+```
+Create config
+```
+su -s /bin/sh -c "oslo-config-generator --config-file etc/zun/zun-config-generator.conf" zun 
+su -s /bin/sh -c "cp etc/zun/zun.conf.sample /etc/zun/zun.conf" zun 
+su -s /bin/sh -c "cp etc/zun/rootwrap.conf /etc/zun/rootwrap.conf" zun 
+su -s /bin/sh -c "mkdir -p /etc/zun/rootwrap.d" zun 
+su -s /bin/sh -c "cp etc/zun/rootwrap.d/* /etc/zun/rootwrap.d/" zun 
+su -s /bin/sh -c "cp etc/cni/net.d/* /etc/cni/net.d/" zun
+```
+add permision root
+```
+echo "zun ALL=(root) NOPASSWD: /usr/local/bin/zun-rootwrap /etc/zun/rootwrap.conf *" | sudo tee /etc/sudoers.d/zun-rootwrap 
+```
+edit /etc/zun/zun.conf
+```
+vim /etc/zun/zun.conf 
+ ...
+[DEFAULT] 
+... 
+transport_url = rabbit://openstack:<password>@<controller> 
+state_path = /var/lib/zun 
+ 
+[database] 
+... 
+connection = mysql+pymysql://zun:<password>@<controller>/zun 
+ 
+[keystone_auth] 
+memcached_servers = <controller>:11211 
+www_authenticate_uri = http://<controller>:5000 
+project_domain_name = default 
+project_name = service 
+user_domain_name = default 
+password = <password>
+username = zun 
+auth_url = http://<password>:5000 
+auth_type = password 
+auth_version = v3 
+auth_protocol = http 
+service_token_roles_required = True 
+endpoint_type = internalURL 
+ 
+[compute] 
+host_shared_with_nova = true 
+ 
+[oslo_concurrency] 
+lock_path = /var/lib/zun/tmp 
+```
+- chown user
+```
+  chown zun:zun /etc/zun/zun.conf 
+ ```
+- create Docker и Kuryr 
+```
+mkdir -p /etc/systemd/system/docker.service.d 
+``` 
+create config
+``` 
+- vim  /etc/systemd/system/docker.service.d/docker.conf
+... 
+[Service]
 
+ExecStart=/usr/bin/dockerd --group zun -H tcp://<node>:2375 -H unix:///var/run/docker.sock
+ ```
+- reload and restart service
+```
+systemctl daemon-reload
+systemctl restart docker 
+```
+edit kuryr.conf
+```
+vim /etc/kuryr/kuryr.conf 
+ 
+[DEFAULT] 
+... 
+capability_scope = global 
+process_external_connectivity = False 
+ ```
+restart kuryr-libnetwork
+```
+systemctl restart kuryr-libnetwork 
+ ```
+edit containerd
+```
+vim /etc/containerd/config.toml 
+# getent group zun | cut -d: -f3 
+...  
+[grpc] 
+  ... 
+  gid = ZUN_GROUP_ID  # past group id
+```
 
+# CNI 
+download cni
+```
+mkdir -p /opt/cni/bin 
+curl -L https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz | tar -C /opt/cni/bin -xzvf - ./loopback 
+ ```
+Install Zun CNI plugin
+```
+install -o zun -m 0555 -D /usr/local/bin/zun-cni /opt/cni/bin/zun-cni 
+```
+create service zun-compute
+``` 
+vim /etc/systemd/system/zun-compute.service 
+ ...
 
-
-
-
-
-
-
-masakari-api
-An OpenStack-native REST API that processes API requests by sending them to the masakari-engine over Remote Procedure Call (RPC).
-
-masakari-engine
-Processes the notifications received from masakari-api by executing the recovery workflow in asynchronous way.
-
-
-su -s /bin/sh  -c "/usr/local/bin/zun-db-manage upgrade" zun
-pciutils!!! zun
-
-
-## plugin kata
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
-         runtime_type = "io.containerd.kata.v2"
-	 privileged_without_host_devices = true
-	 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata.options]
-	   ConfigPath = "/etc/kata-containers/config.toml"
-
-
-
-
-good luck
---------------------------------------------
-
-
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-
-SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+[Unit] 
+Description = OpenStack Container Service Compute Agent 
+ 
+[Service] 
+ExecStart = /usr/local/bin/zun-compute 
+User = zun                                                                     # Service not started for user zun and don't add new node/ error not avalible host!
+ 
+[Install] 
+WantedBy = multi-user.target
+...
 
