@@ -2873,6 +2873,29 @@ Octavia-UI
 pip3 install octavia-dashboard
 cp /usr/local/lib/python3.9/site-packages/octavia_dashboard/enabled/*py /usr/share/openstack-dashboard/openstack_dashboard/local/enabled
 # Zun and octavia install folder /usr/local/lib/python3.9/site-packages
+```
+
+ ## Install Zun
+
+first istall Docker
+```
+sudo yum install -y yum-utils
+```
+install repo 
+```
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+```
+install programs
+
+```
+sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+start docker
+```
+sudo systemctl start docker
+```
+ 
+
 
 
 
