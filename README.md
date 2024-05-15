@@ -3339,3 +3339,46 @@ hw:cpu_policy=shared
 
 qemu-img convert octavia-amphora-haproxy-2023.1.qcow2 octavia-amphora.img
 
+mcedit /etc/exports >>
+/var/lib/nova/instances *(rw,sync,fsid=0,no_root_squash)
+
+vi /etc/fstab >>
+node0:/ /var/lib/nova/instances nfs4 defaults 0 0
+
+systemctl restart nfs-server
+systemctl enable nfs-server
+mount -a -v
+
+mcedit /etc/libvirt/libvirtd.conf >>
+listen_tcp = 1
+listen_tls = 0
+unix_sock_group = "libvirt"
+tcp_port = "16509"
+listen_addr = "0.0.0.0"
+unix_sock_rw_perms = "0770"
+auth_unix_ro = "none"
+auth_unix_rw = "none"
+auth_tcp = "none"
+
+
+#mcedit /usr/lib/systemd/system/libvirtd.service >>
+#Environment=LIBVIRTD_ARGS="--timeout 120 --listen"
+#systemctl daemon-reload
+
+iptables -I INPUT -p tcp -m tcp --dport 16509 -j ACCEPT
+service iptables save
+
+#mcedit /etc/sysconfig/libvirtd >>
+#Uncomment LIBVIRTD_ARGS="--listen"
+
+#mcedit /etc/libvirt/qemu.conf >>
+#user = nova
+#group = libvirt
+
+usermod -a -G libvirt $(whoami)
+usermod -a -G nova $(whoami)
+chown -R qemu:libvirt /usr/share/libvirt /etc/libvirt
+chown -R nova:libvirt /var/lib/nova/instances/ /var/run/libvirt/
+
+systemctl enable libvirtd-tcp.socket libvirtd-ro.socket
+systemctl restart libvirtd openstack-nova-compute libvirtd-tcp.socket
