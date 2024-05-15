@@ -3336,3 +3336,6 @@ hw:cpu_threads=8
 
 hw:mem_pages_size=2G
 hw:cpu_policy=shared
+
+qemu-img convert octavia-amphora-haproxy-2023.1.qcow2 octavia-amphora.img
+
