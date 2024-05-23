@@ -3381,4 +3381,19 @@ chown -R qemu:libvirt /usr/share/libvirt /etc/libvirt
 chown -R nova:libvirt /var/lib/nova/instances/ /var/run/libvirt/
 
 systemctl enable libvirtd-tcp.socket libvirtd-ro.socket
+
+
+#######zun-compute##################
+[Unit]
+Description = OpenStack Container Service Compute Agent
+
+[Service]
+Restart=on-failure
+ExecStart = /usr/local/bin/zun-compute
+User = root
+
+[Install]
+WantedBy = multi-user.target
+####################################
+
 systemctl restart libvirtd openstack-nova-compute libvirtd-tcp.socket
