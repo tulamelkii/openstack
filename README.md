@@ -3397,3 +3397,8 @@ WantedBy = multi-user.target
 ####################################
 
 systemctl restart libvirtd openstack-nova-compute libvirtd-tcp.socket
+
+
+![image](https://github.com/tulamelkii/openstack/assets/130311206/07e197ec-1991-4507-bc29-f7ddf989c1eb):
+
+
