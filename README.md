@@ -162,7 +162,7 @@ su -s /bin/sh -c "keystone-manage db_sync" keystone
 create user keystone and group keysone  that will be used to run keystone
 ```
  keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
- keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+ keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
 
 ...log..........
 2024-03-06 07:57:49.585 9642 INFO keystone.common.utils [-] /etc/keystone/credential-keys/ does not appear to exist; attempting to create it
