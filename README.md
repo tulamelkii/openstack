@@ -3101,10 +3101,18 @@ lock_path = /var/lib/zun/tmp
 driver = messaging 
  
 [websocket_proxy] 
-wsproxy_host = <ecternal ip> 
+wsproxy_host = <external ip> 
 wsproxy_port = 6784 
 base_url = ws://<external_ip>:6784/  # for interface container
- 
+
+[docker]
+
+docker_remote_api_url = tcp://helius:2375
+docker_remote_api_host = helius
+
+
+
+
 ```
 add rules 
 ```
@@ -3254,7 +3262,7 @@ host_shared_with_nova = true
  
 [oslo_concurrency] 
 lock_path = /var/lib/zun/tmp 
-```
+```f
 - chown user
 ```
   chown zun:zun /etc/zun/zun.conf 
