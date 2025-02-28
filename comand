@@ -1,0 +1,10 @@
+--------hypervisor-----------------------------
+openstack hypervisor list    #list hypervisor
+openstack hypervisor show    <hypervisor_id>
+openstack hypervisor stats show                    # statistic hypervisor
+----------resource-----------------------------
+openstack resource provider list
+openstack resource provider inventory list  <id>       # show cpu  mem allocation
+------------------------------------------------
+opensteck server list --all-projects --host <name host>
+openstack server show <name server>
